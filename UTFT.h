@@ -45,7 +45,7 @@
 #ifndef UTFT_h
 #define UTFT_h
 
-#define UTFT_VERSION	276
+#define UTFT_VERSION	277
 
 #define LEFT 0
 #define RIGHT 9999

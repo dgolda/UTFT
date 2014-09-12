@@ -124,6 +124,7 @@ UTFT::UTFT(byte model, int RS, int WR, int CS, int RST, int SER)
 
 	if (display_transfer_mode!=1)
 	{
+		_set_direction_registers(display_transfer_mode);
 		P_RS	= portOutputRegister(digitalPinToPort(RS));
 		B_RS	= digitalPinToBitMask(RS);
 		P_WR	= portOutputRegister(digitalPinToPort(WR));
@@ -206,6 +207,9 @@ void UTFT::LCD_Write_COM_DATA(char com1,int dat1)
 
 void UTFT::InitLCD(byte orientation)
 {
+	orient=orientation;
+	_hw_special_init();
+
 	pinMode(__p1,OUTPUT);
 	pinMode(__p2,OUTPUT);
 	pinMode(__p3,OUTPUT);
@@ -215,9 +219,6 @@ void UTFT::InitLCD(byte orientation)
 		pinMode(__p5,OUTPUT);
 	if (display_transfer_mode!=1)
 		_set_direction_registers(display_transfer_mode);
-
-	orient=orientation;
-	_hw_special_init();
 
 	sbi(P_RST, B_RST);
 	delay(5); 
