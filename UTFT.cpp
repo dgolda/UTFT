@@ -119,147 +119,8 @@ UTFT::UTFT(byte model, int RS, int WR, int CS, int RST, int SER)
 
 	if (display_transfer_mode == SERIAL_4PIN)
 	{
-		case HX8347A:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case ILI9327:
-			disp_x_size=239;
-			disp_y_size=399;
-			display_transfer_mode=16;
-			break;
-		case SSD1289:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case ILI9325C:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=8;
-			break;
-		case ILI9325D_8:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=8;
-			break;
-		case ILI9325D_16:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case ILI9325D_16ALT:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case HX8340B_8:
-			disp_x_size=175;
-			disp_y_size=219;
-			display_transfer_mode=8;
-			break;
-		case HX8340B_S:
-			disp_x_size=175;
-			disp_y_size=219;
 			display_transfer_mode=1;
 			display_serial_mode=SERIAL_4PIN;
-			break;
-		case HX8352A:
-			disp_x_size=239;
-			disp_y_size=399;
-			display_transfer_mode=16;
-			break;
-		case ST7735:
-			disp_x_size=127;
-			disp_y_size=159;
-			display_transfer_mode=1;
-			display_serial_mode=SERIAL_5PIN;
-			break;
-		case ST7735S:
-			disp_x_size=127;
-			disp_y_size=159;
-			display_transfer_mode=1;
-			display_serial_mode=SERIAL_5PIN;
-			break;
-		case PCF8833:
-			disp_x_size=127;
-			disp_y_size=127;
-			display_transfer_mode=1;
-			display_serial_mode=SERIAL_5PIN;
-			break;
-		case S1D19122:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case SSD1963_480:
-			disp_x_size=271;
-			disp_y_size=479;
-			display_transfer_mode=16;
-			break;
-		case SSD1963_800:
-			disp_x_size=479;
-			disp_y_size=799;
-			display_transfer_mode=16;
-			break;
-		case SSD1963_800ALT:
-			disp_x_size=479;
-			disp_y_size=799;
-			display_transfer_mode=16;
-			break;
-		case S6D1121_8:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=8;
-			break;
-		case S6D1121_16:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case SSD1289LATCHED:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=LATCHED_16;
-			break;
-		case ILI9320_8:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=8;
-			break;
-		case ILI9320_16:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=16;
-			break;
-		case SSD1289_8:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=8;
-			break;
-		case ILI9481:
-			disp_x_size=319;
-			disp_y_size=479;
-			display_transfer_mode=16;
-			break;
-		case S6D0164:
-			disp_x_size=175;
-			disp_y_size=219;
-			display_transfer_mode=8;
-			break;
-		case ILI9341_S5P:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=1;
-			display_serial_mode=SERIAL_5PIN;
-			break;
-		case ILI9341_S4P:
-			disp_x_size=239;
-			disp_y_size=319;
-			display_transfer_mode=1;
-			display_serial_mode=SERIAL_4PIN;
-			break;
 	}
 	if (display_transfer_mode == SERIAL_5PIN)
 	{
@@ -972,7 +833,8 @@ void UTFT::drawHLine(int x, int y, int l)
 	setXY(x, y, x+l, y);
 	if (display_transfer_mode == 16)
 	{
-		LCD_Write_DATA(ch, cl);
+		sbi(P_RS, B_RS);
+		_fast_fill_16(fch,fcl,l);
 	}
 	else if ((display_transfer_mode==8) and (fch==fcl))
 	{

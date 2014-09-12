@@ -173,6 +173,18 @@
 #define VGA_PURPLE		0x8010
 #define VGA_TRANSPARENT	0xFFFFFFFF
 
+
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_LCD_WRIT_BUS 1
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SHOW_COLOR_BAR 1
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_DISPLAY_TRANSFER_MODE 1 //8 bit mode
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_CLR_SCR 1
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SET_PIXEL 1
+
+//optional:
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_WRITE_COM_DATA 1
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_INIT_LCD 1
+#define MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_INIT_LCD2 1
+
 #if defined(__AVR__)
 	#include "Arduino.h"
 	#include "hardware/avr/HW_AVR_defines.h"
@@ -201,29 +213,29 @@ class UTFT
 #ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SHOW_COLOR_BAR
 		void show_color_bar();
 #endif
-		void InitLCD(byte orientation=LANDSCAPE);
-		void clrScr();
-		void drawPixel(int x, int y);
-		void drawLine(int x1, int y1, int x2, int y2);
-		void fillScr(byte r, byte g, byte b);
-		void fillScr(word color);
-		void drawRect(int x1, int y1, int x2, int y2);
-		void drawRoundRect(int x1, int y1, int x2, int y2);
-		void fillRect(int x1, int y1, int x2, int y2);
-		void fillRoundRect(int x1, int y1, int x2, int y2);
-		void drawCircle(int x, int y, int radius);
-		void fillCircle(int x, int y, int radius);
-		void setColor(byte r, byte g, byte b);
-		void setColor(word color);
-		word getColor();
-		void setBackColor(byte r, byte g, byte b);
-		void setBackColor(uint32_t color);
-		word getBackColor();
-		void print(char *st, int x, int y, int deg=0);
-		void print(String st, int x, int y, int deg=0);
-		void printNumI(long num, int x, int y, int length=0, char filler=' ');
-		void printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char filler=' ');
-		void setFont(uint8_t* font);
+		void	InitLCD(byte orientation=LANDSCAPE);
+		void	clrScr();
+		void	drawPixel(int x, int y);
+		void	drawLine(int x1, int y1, int x2, int y2);
+		void	fillScr(byte r, byte g, byte b);
+		void	fillScr(word color);
+		void	drawRect(int x1, int y1, int x2, int y2);
+		void	drawRoundRect(int x1, int y1, int x2, int y2);
+		void	fillRect(int x1, int y1, int x2, int y2);
+		void	fillRoundRect(int x1, int y1, int x2, int y2);
+		void	drawCircle(int x, int y, int radius);
+		void	fillCircle(int x, int y, int radius);
+		void	setColor(byte r, byte g, byte b);
+		void	setColor(word color);
+		word	getColor();
+		void	setBackColor(byte r, byte g, byte b);
+		void	setBackColor(uint32_t color);
+		word	getBackColor();
+		void	print(char *st, int x, int y, int deg=0);
+		void	print(String st, int x, int y, int deg=0);
+		void	printNumI(long num, int x, int y, int length=0, char filler=' ');
+		void	printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char filler=' ');
+		void	setFont(uint8_t* font);
 		uint8_t* getFont();
 		uint8_t	getFontXsize();
 		uint8_t	getFontYsize();
