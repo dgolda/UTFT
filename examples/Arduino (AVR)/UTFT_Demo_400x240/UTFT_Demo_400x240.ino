@@ -131,13 +131,16 @@ myGLCD.clrScr();
     buf[x-1]=y;
   }
 
-//  delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some filled rectangles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some filled rectangles", CENTER, 1);
   for (int i=1; i<6; i++)
   {
     switch (i)
@@ -161,13 +164,16 @@ myGLCD.clrScr();
     myGLCD.fillRect(110+(i*20), 30+(i*20), 170+(i*20), 90+(i*20));
   }
 
-  //delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some filled, rounded rectangles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some filled, rounded rectangles", CENTER, 1);
   for (int i=1; i<6; i++)
   {
     switch (i)
@@ -191,13 +197,16 @@ myGLCD.clrScr();
     myGLCD.fillRoundRect(230-(i*20), 30+(i*20), 290-(i*20), 90+(i*20));
   }
   
-//  delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some filled circles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some filled circles", CENTER, 1);
   for (int i=1; i<6; i++)
   {
     switch (i)
@@ -221,13 +230,16 @@ myGLCD.clrScr();
     myGLCD.fillCircle(110+(i*30),60+(i*20), 30);
   }
   
-  //delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some lines in a pattern
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some lines in a pattern", CENTER, 1);
   myGLCD.setColor (255,0,0);
   for (int i=15; i<224; i+=5)
   {
@@ -249,13 +261,16 @@ myGLCD.clrScr();
     myGLCD.drawLine(398, i, 410-(i*1.77), 224);
   }
   
-//  delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
+//  myGLCD.setColor(0,0,0);
   myGLCD.fillRect(1,15,398,224);
 
 // Draw some random circles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some random circles", CENTER, 1);
   for (int i=0; i<100; i++)
   {
     myGLCD.setColor(random(255), random(255), random(255));
@@ -265,13 +280,16 @@ myGLCD.clrScr();
     myGLCD.drawCircle(x, y, r);
   }
 
- // delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some random rectangles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some random rectangles", CENTER, 1);
   for (int i=0; i<100; i++)
   {
     myGLCD.setColor(random(255), random(255), random(255));
@@ -282,13 +300,16 @@ myGLCD.clrScr();
     myGLCD.drawRect(x, y, x2, y2);
   }
 
-//  delay(2000);
+  delay(2000);
   
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
 // Draw some random rounded rectangles
 myGLCD.clrScr();
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw some random rounded rectangles", CENTER, 1);
   for (int i=0; i<100; i++)
   {
     myGLCD.setColor(random(255), random(255), random(255));
@@ -298,11 +319,14 @@ myGLCD.clrScr();
     y2=16+random(207);
     myGLCD.drawRoundRect(x, y, x2, y2);
   }
+  delay(2000);
   myGLCD.clrScr();
-  //delay(2000);
-  
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw random lines", CENTER, 1);
 
   for (int i=0; i<100; i++)
   {
@@ -314,10 +338,14 @@ myGLCD.clrScr();
     myGLCD.drawLine(x, y, x2, y2);
   }
 
-//  delay(2000);
+  delay(2000);
  myGLCD.clrScr(); 
-  myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,398,224);
+  myGLCD.setColor(255, 255, 255);
+  myGLCD.setBackColor(255, 0, 0);
+  myGLCD.print("Draw random pixels", CENTER, 1);
+
+//  myGLCD.setColor(0,0,0);
+//  myGLCD.fillRect(1,15,398,224);
 
   for (int i=0; i<10000; i++)
   {
@@ -325,7 +353,7 @@ myGLCD.clrScr();
     myGLCD.drawPixel(2+random(396), 16+random(209));
   }
 
-//  delay(2000);
+ delay(2000);
 myGLCD.clrScr();
  // myGLCD.fillScr(0, 0, 255);
 //  myGLCD.setColor(255, 0, 0);
@@ -342,6 +370,5 @@ myGLCD.clrScr();
   myGLCD.print("Runtime: (msecs)", CENTER, 210);
   myGLCD.printNumI(millis(), CENTER, 225);
   
-  delay (10000);
+  delay (5000);
 }
-
