@@ -46,5 +46,17 @@ Version:
 	2.6	07 Sep 2013  -  added support for 4 more ElecFreaks display modules
 				added support for Watterott electronics MI0283QT-9A display module
 				fixed a bug in the "Arduino (ARM)/UTFT_Demo_480x272" example
-	2.7	03 Nov 2013  -  added support for Bobuino (ATmega1284P) 
+	2.7	03 Nov 2013  -  added support Bobuino (ATmega1284P) 
 				optimized Arduino Due driver slightly
+	2.71	06 Dec 2013  -  added support for ElecFreaks TFT01-4.3
+				added support for Coldtears 3.5" and 4.0" modules
+				minor changes to the library constructor
+				removed unused variables
+	2.72	12 Dec 2013  -  added support for ElecFreaks TFT-2.4 v1.2
+	2.73	16 Feb 2014  -  added support for Teensy 3.x Boards
+				added support for three display modules from ElecHouse
+				minor bugfixes
+				added three new functions for CPLD-based displays
+	2.74	20 Feb 2014  -  fixed a bug in the serial driver
+	2.75	28 Mar 2014  -  added support for Coldtears 5" and 7" CPLD modules
+	2.76	04 May 2014  -  added support for several display modules from DisplayModule

@@ -1,4 +1,4 @@
-// UTFT_Demo_480x320 (C)2013 Henning Karlsen
+// UTFT_Demo_480x320 (C)2014 Henning Karlsen
 // web: http://www.henningkarlsen.com/electronics
 //
 // This program is a demo of how to use most of the functions
@@ -15,11 +15,20 @@
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 
-// Uncomment the next line for Arduino 2009/Uno
-//UTFT myGLCD(CTE32HR,19,18,17,16);   // Remember to change the model parameter to suit your display module!
-
-// Uncomment the next line for Arduino Mega
-UTFT myGLCD(CTE32HR,38,39,40,41);   // Remember to change the model parameter to suit your display module!
+// Set the pins to the correct ones for your development shield
+// ------------------------------------------------------------
+// Arduino Uno / 2009:
+// -------------------
+// Standard Arduino Uno/2009 shield            : <display model>,A5,A4,A3,A2
+// DisplayModule Arduino Uno TFT shield        : <display model>,A5,A4,A3,A2
+//
+// Arduino Mega:
+// -------------------
+// Standard Arduino Mega/Due shield            : <display model>,38,39,40,41
+// CTE TFT LCD/SD Shield for Arduino Mega      : <display model>,38,39,40,41
+//
+// Remember to change the model parameter to suit your display module!
+UTFT myGLCD(CTE32HR,38,39,40,41);
 
 void setup()
 {

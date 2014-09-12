@@ -1,4 +1,4 @@
-// UTFT_Demo_320x240_Serial (C)2013 Henning Karlsen
+// UTFT_Demo_320x240_Serial (C)2014 Henning Karlsen
 // web: http://www.henningkarlsen.com/electronics
 //
 // This program is a demo of how to use most of the functions
@@ -9,6 +9,11 @@
 //
 // This program requires the UTFT library.
 //
+// ********************************************************************
+// * IMPORTANT: Read the comments in the setup() function when        *
+// * using the Watterott MI0283QT9 or the DisplayModule DM-TFT28-105. *
+// ********************************************************************
+//
 
 #include <UTFT.h>
 
@@ -16,21 +21,43 @@
 extern uint8_t SmallFont[];
 
 // Uncomment the line for your display:
-//UTFT myGLCD(TFT01_22SP,9,8,12,11,10);  // ElecFreaks TFT01-2.2SP
-UTFT myGLCD(MI0283QT9,11,13,7,8);        // Watterott MI0283QT9
+//UTFT myGLCD(TFT01_22SP,9,8,12,11,10);            // ElecFreaks TFT01-2.2SP
+//UTFT myGLCD(MI0283QT9,11,13,7,8);                // Watterott MI0283QT9
+UTFT myGLCD(DMTFT28105,MOSI,SCK,10,NOTINUSE,9);  // DisplayModule DM-TFT28-105 (Works with both Arduino Uno and Arduino Mega)
 
 void setup()
 {
+// Watterott
+// ---------
+// The following two lines are needed for the MI0283QT9 display
+// module to enable the backlight. If you are using any other 
+// display module these lines should be commented out.
+// -------------------------------------------------------------
+//  pinMode(9, OUTPUT);
+//  digitalWrite(9, HIGH);
+// -------------------------------------------------------------
+
+// DisplayModule
+// -------------
+// The following 4 lines are needed for the DM-TFT28-105 display
+// module to set the SS/CS pins for the other devices connected 
+// to the Arduino SPI pins. If you are using any other display
+// module these lines should be commented out.
+// -------------------------------------------------------------
+  pinMode(10,OUTPUT); digitalWrite(10,HIGH);  // TFT SS/CE
+  pinMode(8, OUTPUT); digitalWrite(8, HIGH);  // SD card SS/CE
+  pinMode(6, OUTPUT); digitalWrite(6, HIGH);  // Flash chip SS/CE
+  pinMode(4, OUTPUT); digitalWrite(4, HIGH);  // Touch controller SS/CE
+// -------------------------------------------------------------
+
+
+// Just get some random numbers
   randomSeed(analogRead(0));
   
 // Setup the LCD
   myGLCD.InitLCD();
   myGLCD.setFont(SmallFont);
-// The following two lines are needed for the MI0283QT9 display
-// module to enable the backlight. If you are using any other 
-// display module these lines can be commented out.
-  pinMode(9, OUTPUT);
-  digitalWrite(9, HIGH);
+
 }
 
 void loop()
