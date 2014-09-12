@@ -15,11 +15,11 @@
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 
-// Uncomment the next line for chipKit Uno32
-UTFT myGLCD(ITDB32WC,34,35,36,37);   // Remember to change the model parameter to suit your display module!
+// Uncomment the next line for chipKit Uno32/uC32
+UTFT myGLCD(ITDB32WD,34,35,36,37);   // Remember to change the model parameter to suit your display module!
 
 // Uncomment the next line for chipKit Max32
-//UTFT myGLCD(ITDB32WC,82,83,84,85);   // Remember to change the model parameter to suit your display module!
+//UTFT myGLCD(ITDB32WD,82,83,84,85);   // Remember to change the model parameter to suit your display module!
 
 void setup()
 {

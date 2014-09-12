@@ -1,6 +1,6 @@
 /*
   UTFT.h - Arduino/chipKit library support for Color TFT LCD Boards
-  Copyright (C)2010-2012 Henning Karlsen. All right reserved
+  Copyright (C)2010-2013 Henning Karlsen. All right reserved
   
   This library is the continuation of my ITDB02_Graph, ITDB02_Graph16
   and RGB_GLCD libraries for Arduino and chipKit. As the number of 
@@ -31,22 +31,14 @@
   http://electronics.henningkarlsen.com/contact.php.
 
   This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  modify it under the terms of the CC BY-NC-SA 3.0 license.
+  Please see the included documents for further information.
 */
 
 #ifndef UTFT_h
 #define UTFT_h
+
+#define UTFT_VERSION	241
 
 #define LEFT 0
 #define RIGHT 9999
@@ -75,12 +67,15 @@
 #define ILI9320_8		17
 #define ILI9320_16		18
 #define SSD1289_8		19
+#define	SSD1963_800ALT	20
+#define ILI9481			21
 
 #define ITDB32			0	// HX8347-A (16bit)
 #define ITDB32WC		1	// ILI9327  (16bit)
 #define TFT01_32W		1	// ILI9327	(16bit)
 #define ITDB32S			2	// SSD1289  (16bit)
 #define TFT01_32		2	// SSD1289  (16bit)
+#define CTE32			2	// SSD1289  (16bit)
 #define GEEE32			2	// SSD1289  (16bit)
 #define ITDB24			3	// ILI9325C (8bit)
 #define ITDB24D			4	// ILI9325D (8bit)
@@ -98,6 +93,8 @@
 #define ITDB25H			11	// S1D19122	(16bit)
 #define ITDB43			12	// SSD1963	(16bit) 480x272
 #define ITDB50			13	// SSD1963	(16bit) 800x480
+#define TFT01_50		13	// SSD1963	(16bit) 800x480
+#define CTE50			13	// SSD1963	(16bit) 800x480
 #define ITDB24E_8		14	// S6D1121	(8bit)
 #define ITDB24E_16		15	// S6D1121	(16bit)
 #define INFINIT32		16	// SSD1289	(Latched 16bit) -- Legacy, will be removed later
@@ -105,6 +102,9 @@
 #define GEEE24			17	// ILI9320	(8bit)
 #define GEEE28			18	// ILI9320	(16bit)
 #define ELEE32_REVB		19	// SSD1289	(8bit)
+#define TFT01_70		20	// SSD1963	(16bit) 800x480 Alternative Init
+#define CTE70			20	// SSD1963	(16bit) 800x480 Alternative Init
+#define CTE32HR			21	// ILI9481	(16bit)
 
 #define SERIAL_4PIN		4
 #define SERIAL_5PIN		5
@@ -130,16 +130,17 @@
 #define VGA_NAVY		0x0010
 #define VGA_FUCHSIA		0xF81F
 #define VGA_PURPLE		0x8010
+#define VGA_TRANSPARENT	0xFFFFFFFF
 
 #if defined(__AVR__)
 	#include "Arduino.h"
-	#include "HW_AVR_defines.h"
+	#include "hardware/avr/HW_AVR_defines.h"
 #elif defined(__PIC32MX__)
 	#include "WProgram.h"
-	#include "HW_PIC32_defines.h"
+	#include "hardware/pic32/HW_PIC32_defines.h"
 #elif defined(__arm__)
 	#include "Arduino.h"
-	#include "HW_ARM_defines.h"
+	#include "hardware/arm/HW_ARM_defines.h"
 #endif
 
 struct _current_font
@@ -172,7 +173,7 @@ class UTFT
 		void setColor(word color);
 		word getColor();
 		void setBackColor(byte r, byte g, byte b);
-		void setBackColor(word color);
+		void setBackColor(uint32_t color);
 		word getBackColor();
 		void print(char *st, int x, int y, int deg=0);
 		void print(String st, int x, int y, int deg=0);
@@ -190,7 +191,14 @@ class UTFT
 		int  getDisplayXSize();
 		int	 getDisplayYSize();
 
-	protected:
+/*
+	The functions and variables below should not normally be used.
+	They have been left publicly available for use in add-on libraries
+	that might need access to the lower level functions of UTFT.
+
+	Please note that these functions and variables are not documented
+	and I do not provide support on how to use them.
+*/
 		byte fch, fcl, bch, bcl;
 		byte orient;
 		long disp_x_size, disp_y_size;
@@ -198,6 +206,7 @@ class UTFT
 		regtype *P_RS, *P_WR, *P_CS, *P_RST, *P_SDA, *P_SCL, *P_ALE;
 		regsize B_RS, B_WR, B_CS, B_RST, B_SDA, B_SCL, B_ALE;
 		_current_font	cfont;
+		boolean _transparent;
 
 		void LCD_Writ_Bus(char VH,char VL, byte mode);
 		void LCD_Write_COM(char VL);
@@ -215,6 +224,7 @@ class UTFT
 		void _set_direction_registers(byte mode);
 		void _fast_fill_16(int ch, int cl, long pix);
 		void _fast_fill_8(int ch, long pix);
+		void _convert_float(char *buf, double num, int width, byte prec);
 };
 
 #endif

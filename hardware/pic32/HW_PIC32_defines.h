@@ -1,6 +1,10 @@
-// Enable or disable the use of the AquaLEDSource All in One Super Screw Shield
+// AquaLEDSource All in One Super Screw Shield
+// -------------------------------------------
 // Uncomment the following line if you are using this shield
 //#define AQUALED_SHIELD 1
+//
+// For this shield: RS=82, WR=83, CS=84, RST=85 (Standard for chipKit Max32)
+//**************************************************************************
 
 // *** Hardwarespecific defines ***
 #define cbi(reg, bitmask) (*(reg + 1)) = bitmask
