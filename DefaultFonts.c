@@ -4,7 +4,7 @@
 
 #if defined(__AVR__)
 	#include <avr/pgmspace.h>
-	#define fontdatatype uint8_t
+	#define fontdatatype const uint8_t
 #elif defined(__PIC32MX__)
 	#define PROGMEM
 	#define fontdatatype const unsigned char
