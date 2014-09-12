@@ -131,7 +131,7 @@ void UTFT::_fast_fill_16(int ch, int cl, long pix)
 		pulse_low(P_WR, B_WR);
 	}
 	if ((pix % 16) != 0)
-		for (int i=0; i<(pix % 16); i++)
+		for (int i=0; i<(pix % 16)+1; i++)
 		{
 			pulse_low(P_WR, B_WR);
 		}
@@ -164,7 +164,7 @@ void UTFT::_fast_fill_8(int ch, long pix)
 		pulse_low(P_WR, B_WR);pulse_low(P_WR, B_WR);
 	}
 	if ((pix % 16) != 0)
-		for (int i=0; i<(pix % 16); i++)
+		for (int i=0; i<(pix % 16)+1; i++)
 		{
 			pulse_low(P_WR, B_WR);pulse_low(P_WR, B_WR);
 		}

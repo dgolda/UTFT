@@ -38,7 +38,7 @@
 #ifndef UTFT_h
 #define UTFT_h
 
-#define UTFT_VERSION	241
+#define UTFT_VERSION	270
 
 #define LEFT 0
 #define RIGHT 9999
@@ -69,6 +69,11 @@
 #define SSD1289_8		19
 #define	SSD1963_800ALT	20
 #define ILI9481			21
+#define ILI9325D_16ALT	22
+#define S6D0164			23
+#define ST7735S			24
+#define ILI9341_S5P		25
+#define ILI9341_S4P		26
 
 #define ITDB32			0	// HX8347-A (16bit)
 #define ITDB32WC		1	// ILI9327  (16bit)
@@ -88,6 +93,7 @@
 #define ITDB22SP		7	// HX8340-B (Serial)
 #define ITDB32WD		8	// HX8352-A (16bit)
 #define TFT01_32WD		8	// HX8352-A	(16bit)
+#define CTE32W			8	// HX8352-A	(16bit)
 #define ITDB18SP		9	// ST7735   (Serial)
 #define LPH9135			10	// PCF8833	(Serial)
 #define ITDB25H			11	// S1D19122	(16bit)
@@ -105,6 +111,14 @@
 #define TFT01_70		20	// SSD1963	(16bit) 800x480 Alternative Init
 #define CTE70			20	// SSD1963	(16bit) 800x480 Alternative Init
 #define CTE32HR			21	// ILI9481	(16bit)
+#define CTE28			22	// ILI9325D (16bit) Alternative Init
+#define TFT01_28		22	// ILI9325D (16bit) Alternative Init
+#define CTE22			23	// S6D0164	(8bit)
+#define TFT01_22		23	// S6D0164	(8bit)
+#define TFT01_18SP		24	// ST7735S  (Serial)
+#define TFT01_22SP		25	// ILI9341	(Serial 5Pin)
+#define MI0283QT9		26  // ILI9341	(Serial 4Pin)
+
 
 #define SERIAL_4PIN		4
 #define SERIAL_5PIN		5

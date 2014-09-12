@@ -52,7 +52,7 @@ case SSD1963_800ALT:
 	LCD_Write_DATA(0x01);		//GPIO0 normal
 
 	LCD_Write_COM(0x36);		//rotation
-	LCD_Write_DATA(0x02);		// -- Set to 0x01 to rotate 180 degrees
+	LCD_Write_DATA(0x22);		// -- Set to 0x21 to rotate 180 degrees
 
 	LCD_Write_COM(0xF0);		//pixel data interface
 	LCD_Write_DATA(0x03);

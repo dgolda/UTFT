@@ -50,6 +50,8 @@
 		#include "hardware/avr/HW_ATmega32U4.h"
 	#elif defined(__AVR_ATmega168__)
 		#error "ATmega168 MCUs are not supported because they have too little flash memory!"
+	#elif defined(__AVR_ATmega1284P__)
+		#include "hardware/avr/HW_ATmega1284P.h"
 	#else
 		#error "Unsupported AVR MCU!"
 	#endif
@@ -116,6 +118,11 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 			disp_y_size=319;
 			display_transfer_mode=16;
 			break;
+		case ILI9325D_16ALT:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=16;
+			break;
 		case HX8340B_8:
 			disp_x_size=175;
 			disp_y_size=219;
@@ -133,6 +140,12 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 			display_transfer_mode=16;
 			break;
 		case ST7735:
+			disp_x_size=127;
+			disp_y_size=159;
+			display_transfer_mode=1;
+			display_serial_mode=SERIAL_5PIN;
+			break;
+		case ST7735S:
 			disp_x_size=127;
 			disp_y_size=159;
 			display_transfer_mode=1;
@@ -198,6 +211,23 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 			disp_x_size=319;
 			disp_y_size=479;
 			display_transfer_mode=16;
+			break;
+		case S6D0164:
+			disp_x_size=175;
+			disp_y_size=219;
+			display_transfer_mode=8;
+			break;
+		case ILI9341_S5P:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=1;
+			display_serial_mode=SERIAL_5PIN;
+			break;
+		case ILI9341_S4P:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=1;
+			display_serial_mode=SERIAL_4PIN;
 			break;
 	}
 	display_model=model;
@@ -321,7 +351,10 @@ void UTFT::InitLCD(byte orientation)
 	#include "tft_drivers/ili9325c/initlcd.h"
 #endif
 #ifndef DISABLE_ILI9325D
-	#include "tft_drivers/ili9325d/initlcd.h"
+	#include "tft_drivers/ili9325d/default/initlcd.h"
+#endif
+#ifndef DISABLE_ILI9325D_ALT
+	#include "tft_drivers/ili9325d/alt/initlcd.h"
 #endif
 #ifndef DISABLE_HX8340B_8
 	#include "tft_drivers/hx8340b/8/initlcd.h"
@@ -347,7 +380,7 @@ void UTFT::InitLCD(byte orientation)
 #ifndef DISABLE_SSD1963_800
 	#include "tft_drivers/ssd1963/800/initlcd.h"
 #endif
-#ifndef DISABLE_SSD1963_800ALT
+#ifndef DISABLE_SSD1963_800_ALT
 	#include "tft_drivers/ssd1963/800alt/initlcd.h"
 #endif
 #ifndef DISABLE_S6D1121
@@ -358,6 +391,18 @@ void UTFT::InitLCD(byte orientation)
 #endif
 #ifndef DISABLE_ILI9481
 	#include "tft_drivers/ili9481/initlcd.h"
+#endif
+#ifndef DISABLE_S6D0164
+	#include "tft_drivers/s6d0164/initlcd.h"
+#endif
+#ifndef DISABLE_ST7735S
+	#include "tft_drivers/st7735s/initlcd.h"
+#endif
+#ifndef DISABLE_ILI9341_S4P
+	#include "tft_drivers/ili9341/s4p/initlcd.h"
+#endif
+#ifndef DISABLE_ILI9341_S5P
+	#include "tft_drivers/ili9341/s5p/initlcd.h"
 #endif
 	}
 
@@ -400,7 +445,10 @@ void UTFT::setXY(word x1, word y1, word x2, word y2)
 	#include "tft_drivers/ili9325c/setxy.h"
 #endif
 #ifndef DISABLE_ILI9325D
-	#include "tft_drivers/ili9325d/setxy.h"
+	#include "tft_drivers/ili9325d/default/setxy.h"
+#endif
+#ifndef DISABLE_ILI9325D_ALT
+	#include "tft_drivers/ili9325d/alt/setxy.h"
 #endif
 #ifndef DISABLE_HX8340B_8
 	#include "tft_drivers/hx8340b/8/setxy.h"
@@ -423,7 +471,7 @@ void UTFT::setXY(word x1, word y1, word x2, word y2)
 #ifndef DISABLE_SSD1963_800
 	#include "tft_drivers/ssd1963/800/setxy.h"
 #endif
-#ifndef DISABLE_SSD1963_800ALT
+#ifndef DISABLE_SSD1963_800_ALT
 	#include "tft_drivers/ssd1963/800alt/setxy.h"
 #endif
 #ifndef DISABLE_S6D1121
@@ -434,6 +482,18 @@ void UTFT::setXY(word x1, word y1, word x2, word y2)
 #endif
 #ifndef DISABLE_ILI9481
 	#include "tft_drivers/ili9481/setxy.h"
+#endif
+#ifndef DISABLE_S6D0164
+	#include "tft_drivers/s6d0164/setxy.h"
+#endif
+#ifndef DISABLE_ST7735S
+	#include "tft_drivers/st7735s/setxy.h"
+#endif
+#ifndef DISABLE_ILI9341_S4P
+	#include "tft_drivers/ili9341/s4p/setxy.h"
+#endif
+#ifndef DISABLE_ILI9341_S5P
+	#include "tft_drivers/ili9341/s5p/setxy.h"
 #endif
 	}
 }
@@ -1187,7 +1247,7 @@ void UTFT::drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int sca
 			for (ty=0; ty<sy; ty++)
 			{
 				setXY(x, y+ty, x+sx-1, y+ty);
-				for (tx=sx; tx>=0; tx--)
+				for (tx=sx-1; tx>=0; tx--)
 				{
 					col=pgm_read_word(&data[(ty*sx)+tx]);
 					LCD_Write_DATA(col>>8,col & 0xff);
@@ -1222,7 +1282,7 @@ void UTFT::drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int sca
 				for (tsy=0; tsy<scale; tsy++)
 				{
 					setXY(x, y+(ty*scale)+tsy, x+((sx*scale)-1), y+(ty*scale)+tsy);
-					for (tx=sx; tx>=0; tx--)
+					for (tx=sx-1; tx>=0; tx--)
 					{
 						col=pgm_read_word(&data[(ty*sx)+tx]);
 						for (tsx=0; tsx<scale; tsx++)
