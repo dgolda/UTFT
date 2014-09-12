@@ -47,11 +47,40 @@
 
 #include "UTFT.h"
 #include <pins_arduino.h>
+
+// Include hardware-specific functions for the correct MCU
 #if defined(__AVR__)
 	#include <avr/pgmspace.h>
-	#include "HW_AVR.h" 
-#else
-	#include "HW_PIC32.h"
+	#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+		#include "HW_ATmega1280.h" 
+	#elif defined(__AVR_ATmega328P__)
+		#include "HW_ATmega328P.h"
+	#elif defined(__AVR_ATmega32U4__)
+		#include "HW_ATmega32U4.h"
+	#elif defined(__AVR_ATmega168__)
+		#error "ATmega168 MCUs are not supported because they have too little flash memory!"
+	#else
+		#error "Unsupported AVR MCU!"
+	#endif
+#elif defined(__PIC32MX__)
+  #if defined(__32MX320F128H__)
+    #pragma message("Compiling for chipKIT UNO32 (__32MX320F128H__)")
+	#include "HW_PIC32MX320F128H.h"
+  #elif defined(__32MX340F512H__)
+    #error "chipKIT uC32 (__32MX340F512H__) is not supported."
+  #elif defined(__32MX795F512L__)
+    #pragma message("Compiling for chipKIT MAX32 (__32MX795F512L__)")
+	#include "HW_PIC32MX795F512L.h"
+  #else
+    #error "Unsupported PIC32 MCU!"
+  #endif  
+#elif defined(__arm__)
+	#if defined(__SAM3X8E__)
+		#pragma message("Compiling for Arduino Due (AT91SAM3X8E)...")
+		#include "HW_SAM3X8E.h"
+	#else
+		#error "Unsupported ARM MCU!"
+	#endif
 #endif
 #include "memorysaver.h"
 
@@ -146,6 +175,26 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 			disp_y_size=319;
 			display_transfer_mode=16;
 			break;
+		case SSD1289LATCHED:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=LATCHED_16;
+			break;
+		case ILI9320_8:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=8;
+			break;
+		case ILI9320_16:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=16;
+			break;
+		case SSD1289_8:
+			disp_x_size=239;
+			disp_y_size=319;
+			display_transfer_mode=8;
+			break;
 	}
 	display_model=model;
 
@@ -160,6 +209,15 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 		B_CS	= digitalPinToBitMask(CS);
 		P_RST	= portOutputRegister(digitalPinToPort(RST));
 		B_RST	= digitalPinToBitMask(RST);
+		if (display_transfer_mode==LATCHED_16)
+		{
+			P_ALE	= portOutputRegister(digitalPinToPort(SER));
+			B_ALE	= digitalPinToBitMask(SER);
+			pinMode(SER,OUTPUT);
+			cbi(P_ALE, B_ALE);
+			pinMode(8,OUTPUT);
+			digitalWrite(8, LOW);
+		}
 		pinMode(RS,OUTPUT);
 		pinMode(WR,OUTPUT);
 		pinMode(CS,OUTPUT);
@@ -233,6 +291,7 @@ void UTFT::LCD_Write_COM_DATA(char com1,int dat1)
 void UTFT::InitLCD(byte orientation)
 {
 	orient=orientation;
+	_hw_special_init();
 
 	sbi(P_RST, B_RST);
 	delay(5); 
@@ -246,1152 +305,49 @@ void UTFT::InitLCD(byte orientation)
 	switch(display_model)
 	{
 #ifndef DISABLE_HX8347A
-	case HX8347A:
-		LCD_Write_COM_DATA(0x46,0x00A4);
-		LCD_Write_COM_DATA(0x47,0x0053);
-		LCD_Write_COM_DATA(0x48,0x0000);
-		LCD_Write_COM_DATA(0x49,0x0044);
-		LCD_Write_COM_DATA(0x4a,0x0004);
-		LCD_Write_COM_DATA(0x4b,0x0067);
-		LCD_Write_COM_DATA(0x4c,0x0033);
-		LCD_Write_COM_DATA(0x4d,0x0077);
-		LCD_Write_COM_DATA(0x4e,0x0012);
-		LCD_Write_COM_DATA(0x4f,0x004C);
-		LCD_Write_COM_DATA(0x50,0x0046);
-		LCD_Write_COM_DATA(0x51,0x0044);
-
-		//240x320 window setting
-		LCD_Write_COM_DATA(0x02,0x0000); // Column address start2
-		LCD_Write_COM_DATA(0x03,0x0000); // Column address start1
-		LCD_Write_COM_DATA(0x04,0x0000); // Column address end2
-		LCD_Write_COM_DATA(0x05,0x00ef); // Column address end1
-		LCD_Write_COM_DATA(0x06,0x0000); // Row address start2
-		LCD_Write_COM_DATA(0x07,0x0000); // Row address start1
-		LCD_Write_COM_DATA(0x08,0x0001); // Row address end2
-		LCD_Write_COM_DATA(0x09,0x003f); // Row address end1
-
-		// Display Setting
-		LCD_Write_COM_DATA(0x01,0x0006); // IDMON=0, INVON=1, NORON=1, PTLON=0
-		LCD_Write_COM_DATA(0x16,0x00C8); // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0   0048
-		LCD_Write_COM_DATA(0x23,0x0095); // N_DC=1001 0101
-		LCD_Write_COM_DATA(0x24,0x0095); // PI_DC=1001 0101
-		LCD_Write_COM_DATA(0x25,0x00FF); // I_DC=1111 1111
-
-		LCD_Write_COM_DATA(0x27,0x0002); // N_BP=0000 0010
-		LCD_Write_COM_DATA(0x28,0x0002); // N_FP=0000 0010
-		LCD_Write_COM_DATA(0x29,0x0002); // PI_BP=0000 0010
-		LCD_Write_COM_DATA(0x2a,0x0002); // PI_FP=0000 0010
-		LCD_Write_COM_DATA(0x2C,0x0002); // I_BP=0000 0010
-		LCD_Write_COM_DATA(0x2d,0x0002); // I_FP=0000 0010
-
-		LCD_Write_COM_DATA(0x3a,0x0001); // N_RTN=0000, N_NW=001    0001
-		LCD_Write_COM_DATA(0x3b,0x0000); // P_RTN=0000, P_NW=001
-		LCD_Write_COM_DATA(0x3c,0x00f0); // I_RTN=1111, I_NW=000
-		LCD_Write_COM_DATA(0x3d,0x0000); // DIV=00
-		delay(1);
-		LCD_Write_COM_DATA(0x35,0x0038); // EQS=38h
-		LCD_Write_COM_DATA(0x36,0x0078); // EQP=78h
-		LCD_Write_COM_DATA(0x3E,0x0038); // SON=38h
-		LCD_Write_COM_DATA(0x40,0x000F); // GDON=0Fh
-		LCD_Write_COM_DATA(0x41,0x00F0); // GDOFF
-
-		// Power Supply Setting
-		LCD_Write_COM_DATA(0x19,0x0049); // CADJ=0100, CUADJ=100, OSD_EN=1 ,60Hz
-		LCD_Write_COM_DATA(0x93,0x000F); // RADJ=1111, 100%
-		delay(1);
-		LCD_Write_COM_DATA(0x20,0x0040); // BT=0100
-		LCD_Write_COM_DATA(0x1D,0x0007); // VC1=111   0007
-		LCD_Write_COM_DATA(0x1E,0x0000); // VC3=000
-		LCD_Write_COM_DATA(0x1F,0x0004); // VRH=0011
-
-		//VCOM SETTING
-		LCD_Write_COM_DATA(0x44,0x004D); // VCM=101 0000  4D
-		LCD_Write_COM_DATA(0x45,0x000E); // VDV=1 0001   0011
-		delay(1);
-		LCD_Write_COM_DATA(0x1C,0x0004); // AP=100
-		delay(2);
-
-		LCD_Write_COM_DATA(0x1B,0x0018); // GASENB=0, PON=0, DK=1, XDK=0, VLCD_TRI=0, STB=0
-		delay(1);
-		LCD_Write_COM_DATA(0x1B,0x0010); // GASENB=0, PON=1, DK=0, XDK=0, VLCD_TRI=0, STB=0
-		delay(1);
-		LCD_Write_COM_DATA(0x43,0x0080); //set VCOMG=1
-		delay(2);
-
-		// Display ON Setting
-		LCD_Write_COM_DATA(0x90,0x007F); // SAP=0111 1111
-		LCD_Write_COM_DATA(0x26,0x0004); //GON=0, DTE=0, D=01
-		delay(1);
-		LCD_Write_COM_DATA(0x26,0x0024); //GON=1, DTE=0, D=01
-		LCD_Write_COM_DATA(0x26,0x002C); //GON=1, DTE=0, D=11
-		delay(1);
-		LCD_Write_COM_DATA(0x26,0x003C); //GON=1, DTE=1, D=11
-
-		// INTERNAL REGISTER SETTING
-		LCD_Write_COM_DATA(0x57,0x0002); // TEST_Mode=1: into TEST mode
-		LCD_Write_COM_DATA(0x95,0x0001); // SET DISPLAY CLOCK AND PUMPING CLOCK TO SYNCHRONIZE
-		LCD_Write_COM_DATA(0x57,0x0000); // TEST_Mode=0: exit TEST mode
-		//LCD_Write_COM_DATA(0x21,0x0000);
-		LCD_Write_COM(0x22);   
-		break;
+	#include "tft_drivers/hx8347a/initlcd.h"
 #endif
 #ifndef DISABLE_ILI9327
-	case ILI9327:
-		LCD_Write_COM(0xE9);
-		LCD_Write_DATA(0x00,0x20);
-		LCD_Write_COM(0x11); //Exit Sleep
-		delay(100);
-		LCD_Write_COM(0xD1);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x71);
-		LCD_Write_DATA(0x00,0x19);
-		LCD_Write_COM(0xD0);
-		LCD_Write_DATA(0x00,0x07);
-		LCD_Write_DATA(0x00,0x01);
-		LCD_Write_DATA(0x00,0x08);
-		LCD_Write_COM(0x36);
-		LCD_Write_DATA(0x00,0x48);
-		LCD_Write_COM(0x3A);
-		LCD_Write_DATA(0x00,0x05);
-		LCD_Write_COM(0xC1);
-		LCD_Write_DATA(0x00,0x10);
-		LCD_Write_DATA(0x00,0x10);
-		LCD_Write_DATA(0x00,0x02);
-		LCD_Write_DATA(0x00,0x02);
-		LCD_Write_COM(0xC0); //Set Default Gamma
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x35);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x01);
-		LCD_Write_DATA(0x00,0x02);
-		LCD_Write_COM(0xC5); //Set frame rate
-		LCD_Write_DATA(0x00,0x04);
-		LCD_Write_COM(0xD2); //power setting
-		LCD_Write_DATA(0x00,0x01);
-		LCD_Write_DATA(0x00,0x44);
-		LCD_Write_COM(0xC8); //Set Gamma
-		LCD_Write_DATA(0x00,0x04);
-		LCD_Write_DATA(0x00,0x67);
-		LCD_Write_DATA(0x00,0x35);
-		LCD_Write_DATA(0x00,0x04);
-		LCD_Write_DATA(0x00,0x08);
-		LCD_Write_DATA(0x00,0x06);
-		LCD_Write_DATA(0x00,0x24);
-		LCD_Write_DATA(0x00,0x01);
-		LCD_Write_DATA(0x00,0x37);
-		LCD_Write_DATA(0x00,0x40);
-		LCD_Write_DATA(0x00,0x03);
-		LCD_Write_DATA(0x00,0x10);
-		LCD_Write_DATA(0x00,0x08);
-		LCD_Write_DATA(0x00,0x80);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_COM(0x2A); 
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0xeF);
-		LCD_Write_COM(0x2B); 
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x00);
-		LCD_Write_DATA(0x00,0x01);
-		LCD_Write_DATA(0x00,0x8F);
-		LCD_Write_COM(0x29); //display on      
-		LCD_Write_COM(0x2C); //display on
-		break;
+	#include "tft_drivers/ili9327/initlcd.h"
 #endif
 #ifndef DISABLE_SSD1289
-	case SSD1289:
-		LCD_Write_COM_DATA(0x00,0x0001);
-		LCD_Write_COM_DATA(0x03,0xA8A4);
-		LCD_Write_COM_DATA(0x0C,0x0000);
-		LCD_Write_COM_DATA(0x0D,0x080C);
-		LCD_Write_COM_DATA(0x0E,0x2B00);
-		LCD_Write_COM_DATA(0x1E,0x00B7);
-		LCD_Write_COM_DATA(0x01,0x2B3F);
-		LCD_Write_COM_DATA(0x02,0x0600);
-		LCD_Write_COM_DATA(0x10,0x0000);
-		LCD_Write_COM_DATA(0x11,0x6070);
-		LCD_Write_COM_DATA(0x05,0x0000);
-		LCD_Write_COM_DATA(0x06,0x0000);
-		LCD_Write_COM_DATA(0x16,0xEF1C);
-		LCD_Write_COM_DATA(0x17,0x0003);
-		LCD_Write_COM_DATA(0x07,0x0233);
-		LCD_Write_COM_DATA(0x0B,0x0000);
-		LCD_Write_COM_DATA(0x0F,0x0000);
-		LCD_Write_COM_DATA(0x41,0x0000);
-		LCD_Write_COM_DATA(0x42,0x0000);
-		LCD_Write_COM_DATA(0x48,0x0000);
-		LCD_Write_COM_DATA(0x49,0x013F);
-		LCD_Write_COM_DATA(0x4A,0x0000);
-		LCD_Write_COM_DATA(0x4B,0x0000);
-		LCD_Write_COM_DATA(0x44,0xEF00);
-		LCD_Write_COM_DATA(0x45,0x0000);
-		LCD_Write_COM_DATA(0x46,0x013F);
-		LCD_Write_COM_DATA(0x30,0x0707);
-		LCD_Write_COM_DATA(0x31,0x0204);
-		LCD_Write_COM_DATA(0x32,0x0204);
-		LCD_Write_COM_DATA(0x33,0x0502);
-		LCD_Write_COM_DATA(0x34,0x0507);
-		LCD_Write_COM_DATA(0x35,0x0204);
-		LCD_Write_COM_DATA(0x36,0x0204);
-		LCD_Write_COM_DATA(0x37,0x0502);
-		LCD_Write_COM_DATA(0x3A,0x0302);
-		LCD_Write_COM_DATA(0x3B,0x0302);
-		LCD_Write_COM_DATA(0x23,0x0000);
-		LCD_Write_COM_DATA(0x24,0x0000);
-		LCD_Write_COM_DATA(0x25,0x8000);
-		LCD_Write_COM_DATA(0x4f,0x0000);
-		LCD_Write_COM_DATA(0x4e,0x0000);
-		LCD_Write_COM(0x22);   
-		break;
+	#include "tft_drivers/ssd1289/initlcd.h"
 #endif
 #ifndef DISABLE_ILI9325C
-	case ILI9325C:
-		LCD_Write_COM_DATA(0xE5, 0x78F0); // set SRAM internal timing
-		LCD_Write_COM_DATA(0x01, 0x0100); // set Driver Output Control  
-		LCD_Write_COM_DATA(0x02, 0x0700); // set 1 line inversion  
-		LCD_Write_COM_DATA(0x03, 0x1030); // set GRAM write direction and BGR=1.  
-		LCD_Write_COM_DATA(0x04, 0x0000); // Resize register  
-		LCD_Write_COM_DATA(0x08, 0x0207); // set the back porch and front porch  
-		LCD_Write_COM_DATA(0x09, 0x0000); // set non-display area refresh cycle ISC[3:0]  
-		LCD_Write_COM_DATA(0x0A, 0x0000); // FMARK function  
-		LCD_Write_COM_DATA(0x0C, 0x0000); // RGB interface setting  
-		LCD_Write_COM_DATA(0x0D, 0x0000); // Frame marker Position  
-		LCD_Write_COM_DATA(0x0F, 0x0000); // RGB interface polarity  
-		//*************Power On sequence ****************//  
-		LCD_Write_COM_DATA(0x10, 0x0000); // SAP, BT[3:0], AP, DSTB, SLP, STB  
-		LCD_Write_COM_DATA(0x11, 0x0007); // DC1[2:0], DC0[2:0], VC[2:0]  
-		LCD_Write_COM_DATA(0x12, 0x0000); // VREG1OUT voltage  
-		LCD_Write_COM_DATA(0x13, 0x0000); // VDV[4:0] for VCOM amplitude  
-		LCD_Write_COM_DATA(0x07, 0x0001);  
-		delay(200); // Dis-charge capacitor power voltage  
-		LCD_Write_COM_DATA(0x10, 0x1090); // SAP, BT[3:0], AP, DSTB, SLP, STB  
-		LCD_Write_COM_DATA(0x11, 0x0227); // Set DC1[2:0], DC0[2:0], VC[2:0]  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x12, 0x001F); // 0012  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x13, 0x1500); // VDV[4:0] for VCOM amplitude  
-		LCD_Write_COM_DATA(0x29, 0x0027); // 04  VCM[5:0] for VCOMH  
-		LCD_Write_COM_DATA(0x2B, 0x000D); // Set Frame Rate  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x20, 0x0000); // GRAM horizontal Address  
-		LCD_Write_COM_DATA(0x21, 0x0000); // GRAM Vertical Address  
-		// ----------- Adjust the Gamma Curve ----------//  
-		LCD_Write_COM_DATA(0x30, 0x0000);  
-		LCD_Write_COM_DATA(0x31, 0x0707);  
-		LCD_Write_COM_DATA(0x32, 0x0307);  
-		LCD_Write_COM_DATA(0x35, 0x0200);  
-		LCD_Write_COM_DATA(0x36, 0x0008);  
-		LCD_Write_COM_DATA(0x37, 0x0004);  
-		LCD_Write_COM_DATA(0x38, 0x0000);  
-		LCD_Write_COM_DATA(0x39, 0x0707);  
-		LCD_Write_COM_DATA(0x3C, 0x0002);  
-		LCD_Write_COM_DATA(0x3D, 0x1D04);  
-		//------------------ Set GRAM area ---------------//  
-		LCD_Write_COM_DATA(0x50, 0x0000); // Horizontal GRAM Start Address  
-		LCD_Write_COM_DATA(0x51, 0x00EF); // Horizontal GRAM End Address  
-		LCD_Write_COM_DATA(0x52, 0x0000); // Vertical GRAM Start Address  
-		LCD_Write_COM_DATA(0x53, 0x013F); // Vertical GRAM Start Address  
-		LCD_Write_COM_DATA(0x60, 0xA700); // Gate Scan Line  
-		LCD_Write_COM_DATA(0x61, 0x0001); // NDL,VLE, REV   
-		LCD_Write_COM_DATA(0x6A, 0x0000); // set scrolling line  
-		//-------------- Partial Display Control ---------//  
-		LCD_Write_COM_DATA(0x80, 0x0000);  
-		LCD_Write_COM_DATA(0x81, 0x0000);  
-		LCD_Write_COM_DATA(0x82, 0x0000);  
-		LCD_Write_COM_DATA(0x83, 0x0000);  
-		LCD_Write_COM_DATA(0x84, 0x0000);  
-		LCD_Write_COM_DATA(0x85, 0x0000);  
-		//-------------- Panel Control -------------------//  
-		LCD_Write_COM_DATA(0x90, 0x0010);  
-		LCD_Write_COM_DATA(0x92, 0x0600);  
-		LCD_Write_COM_DATA(0x07, 0x0133); // 262K color and display ON        
-		break;
+	#include "tft_drivers/ili9325c/initlcd.h"
 #endif
 #ifndef DISABLE_ILI9325D
-	case ILI9325D_8:
-	case ILI9325D_16:
-		LCD_Write_COM_DATA(0xE5, 0x78F0); // set SRAM internal timing
-		LCD_Write_COM_DATA(0x01, 0x0100); // set Driver Output Control  
-		LCD_Write_COM_DATA(0x02, 0x0200); // set 1 line inversion  
-		LCD_Write_COM_DATA(0x03, 0x1030); // set GRAM write direction and BGR=1.  
-		LCD_Write_COM_DATA(0x04, 0x0000); // Resize register  
-		LCD_Write_COM_DATA(0x08, 0x0207); // set the back porch and front porch  
-		LCD_Write_COM_DATA(0x09, 0x0000); // set non-display area refresh cycle ISC[3:0]  
-		LCD_Write_COM_DATA(0x0A, 0x0000); // FMARK function  
-		LCD_Write_COM_DATA(0x0C, 0x0000); // RGB interface setting  
-		LCD_Write_COM_DATA(0x0D, 0x0000); // Frame marker Position  
-		LCD_Write_COM_DATA(0x0F, 0x0000); // RGB interface polarity  
-		//*************Power On sequence ****************//  
-		LCD_Write_COM_DATA(0x10, 0x0000); // SAP, BT[3:0], AP, DSTB, SLP, STB  
-		LCD_Write_COM_DATA(0x11, 0x0007); // DC1[2:0], DC0[2:0], VC[2:0]  
-		LCD_Write_COM_DATA(0x12, 0x0000); // VREG1OUT voltage  
-		LCD_Write_COM_DATA(0x13, 0x0000); // VDV[4:0] for VCOM amplitude  
-		LCD_Write_COM_DATA(0x07, 0x0001);  
-		delay(200); // Dis-charge capacitor power voltage  
-		LCD_Write_COM_DATA(0x10, 0x1690); // SAP, BT[3:0], AP, DSTB, SLP, STB  
-		LCD_Write_COM_DATA(0x11, 0x0227); // Set DC1[2:0], DC0[2:0], VC[2:0]  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x12, 0x000D); // 0012  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x13, 0x1200); // VDV[4:0] for VCOM amplitude  
-		LCD_Write_COM_DATA(0x29, 0x000A); // 04  VCM[5:0] for VCOMH  
-		LCD_Write_COM_DATA(0x2B, 0x000D); // Set Frame Rate  
-		delay(50); // Delay 50ms  
-		LCD_Write_COM_DATA(0x20, 0x0000); // GRAM horizontal Address  
-		LCD_Write_COM_DATA(0x21, 0x0000); // GRAM Vertical Address  
-		// ----------- Adjust the Gamma Curve ----------//  
-		LCD_Write_COM_DATA(0x30, 0x0000);  
-		LCD_Write_COM_DATA(0x31, 0x0404);  
-		LCD_Write_COM_DATA(0x32, 0x0003);  
-		LCD_Write_COM_DATA(0x35, 0x0405);  
-		LCD_Write_COM_DATA(0x36, 0x0808);  
-		LCD_Write_COM_DATA(0x37, 0x0407);  
-		LCD_Write_COM_DATA(0x38, 0x0303);  
-		LCD_Write_COM_DATA(0x39, 0x0707);  
-		LCD_Write_COM_DATA(0x3C, 0x0504);  
-		LCD_Write_COM_DATA(0x3D, 0x0808);  
-		//------------------ Set GRAM area ---------------//  
-		LCD_Write_COM_DATA(0x50, 0x0000); // Horizontal GRAM Start Address  
-		LCD_Write_COM_DATA(0x51, 0x00EF); // Horizontal GRAM End Address  
-		LCD_Write_COM_DATA(0x52, 0x0000); // Vertical GRAM Start Address  
-		LCD_Write_COM_DATA(0x53, 0x013F); // Vertical GRAM Start Address  
-		LCD_Write_COM_DATA(0x60, 0xA700); // Gate Scan Line  
-		LCD_Write_COM_DATA(0x61, 0x0001); // NDL,VLE, REV   
-		LCD_Write_COM_DATA(0x6A, 0x0000); // set scrolling line  
-		//-------------- Partial Display Control ---------//  
-		LCD_Write_COM_DATA(0x80, 0x0000);  
-		LCD_Write_COM_DATA(0x81, 0x0000);  
-		LCD_Write_COM_DATA(0x82, 0x0000);  
-		LCD_Write_COM_DATA(0x83, 0x0000);  
-		LCD_Write_COM_DATA(0x84, 0x0000);  
-		LCD_Write_COM_DATA(0x85, 0x0000);  
-		//-------------- Panel Control -------------------//  
-		LCD_Write_COM_DATA(0x90, 0x0010);  
-		LCD_Write_COM_DATA(0x92, 0x0000);  
-		LCD_Write_COM_DATA(0x07, 0x0133); // 262K color and display ON        
-		break;
+	#include "tft_drivers/ili9325d/initlcd.h"
 #endif
 #ifndef DISABLE_HX8340B_8
-	case HX8340B_8:
-		LCD_Write_COM_DATA(0x26,0x0084); //PT=10,GON=0, DTE=0, D=0100
-		delay(40);
-		LCD_Write_COM_DATA(0x26,0x00B8); //PT=10,GON=1, DTE=1, D=1000
-		delay(40);
-		LCD_Write_COM_DATA(0x26,0x00BC); //PT=10,GON=1, DTE=1, D=1100
-		delay(20);                           //新增加的延时  080421    
-		// LCD_Write_COM_DATA(0x0001,0x0000);     // PTL='1' Enter Partail mode
-
-		//Driving ability Setting
-		LCD_Write_COM_DATA(0x60,0x0000);
-		LCD_Write_COM_DATA(0x61,0x0006);
-		LCD_Write_COM_DATA(0x62,0x0000);
-		LCD_Write_COM_DATA(0x63,0x00C8);
-		delay(20);
-
-		//Gamma Setting
-		LCD_Write_COM_DATA(0x73,0x0070);
-		LCD_Write_COM_DATA(0x40,0x0000);
-		LCD_Write_COM_DATA(0x41,0x0040);
-		LCD_Write_COM_DATA(0x42,0x0045);
-		LCD_Write_COM_DATA(0x43,0x0001);
-		LCD_Write_COM_DATA(0x44,0x0060);
-		LCD_Write_COM_DATA(0x45,0x0005);
-		LCD_Write_COM_DATA(0x46,0x000C);
-		LCD_Write_COM_DATA(0x47,0x00D1);
-		LCD_Write_COM_DATA(0x48,0x0005);
-
-		LCD_Write_COM_DATA(0x50,0x0075);
-		LCD_Write_COM_DATA(0x51,0x0001);
-		LCD_Write_COM_DATA(0x52,0x0067);
-		LCD_Write_COM_DATA(0x53,0x0014);
-		LCD_Write_COM_DATA(0x54,0x00F2);
-		LCD_Write_COM_DATA(0x55,0x0007);
-		LCD_Write_COM_DATA(0x56,0x0003);
-		LCD_Write_COM_DATA(0x57,0x0049);
-		delay(20);
-
-		//Power Setting
-		LCD_Write_COM_DATA(0x1F,0x0003); //VRH=4.65V     VREG1（GAMMA） 00~1E  080421    
-		LCD_Write_COM_DATA(0x20,0x0000); //BT (VGH~15V,VGL~-12V,DDVDH~5V)
-		LCD_Write_COM_DATA(0x24,0x0024); //VCOMH(VCOM High voltage3.2V)     0024/12    080421    11~40
-		LCD_Write_COM_DATA(0x25,0x0034); //VCOML(VCOM Low voltage -1.2V)    0034/4A    080421    29~3F 
-		//****VCOM offset**///
-		LCD_Write_COM_DATA(0x23,0x002F); //VMF(no offset)                            
-		delay(20);
-
-		//##################################################################
-		// Power Supply Setting
-		LCD_Write_COM_DATA(0x18,0x0044); //I/P_RADJ,N/P_RADJ Noraml mode 60Hz
-		LCD_Write_COM_DATA(0x21,0x0001); //OSC_EN='1' start osc
-		LCD_Write_COM_DATA(0x01,0x0000); //SLP='0' out sleep
-		LCD_Write_COM_DATA(0x1C,0x0003); //AP=011
-		LCD_Write_COM_DATA(0x19,0x0006); // VOMG=1,PON=1, DK=0,
-		delay(20);
-
-		//##################################################################
-		// Display ON Setting
-		LCD_Write_COM_DATA(0x26,0x0084); //PT=10,GON=0, DTE=0, D=0100
-		delay(40);
-		LCD_Write_COM_DATA(0x26,0x00B8); //PT=10,GON=1, DTE=1, D=1000
-		delay(40);
-		LCD_Write_COM_DATA(0x26,0x00BC); //PT=10,GON=1, DTE=1, D=1100
-		delay(20);
-
-		//SET GRAM AREA
-		LCD_Write_COM_DATA(0x02,0x0000); 
-		LCD_Write_COM_DATA(0x03,0x0000); 
-		LCD_Write_COM_DATA(0x04,0x0000);
-		LCD_Write_COM_DATA(0x05,0x00AF);
-		LCD_Write_COM_DATA(0x06,0x0000);
-		LCD_Write_COM_DATA(0x07,0x0000);
-		LCD_Write_COM_DATA(0x08,0x0000);
-		LCD_Write_COM_DATA(0x09,0x00DB);
-		delay(20);
-		LCD_Write_COM_DATA(0x16,0x0008);  //MV MX MY ML SET  0028横屏显示（此时LCD_Write_COM_DATA(0x0005,0x00DB);  LCD_Write_COM_DATA(0x0009,0x00AF);）
-		LCD_Write_COM_DATA(0x17,0x0005);//COLMOD Control Register (R17h)
-		LCD_Write_COM(0x21);
-		LCD_Write_COM(0x22);
-		break;
+	#include "tft_drivers/hx8340b/8/initlcd.h"
 #endif
 #ifndef DISABLE_HX8340B_S
-	case HX8340B_S:
-		LCD_Write_COM(0xC1); 
-		LCD_Write_DATA(0xFF);
-		LCD_Write_DATA(0x83);
-		LCD_Write_DATA(0x40); 
-		LCD_Write_COM(0x11); 
-		delay(100);
-		LCD_Write_COM(0xCA); 
-		LCD_Write_DATA(0x70);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0xD9); 
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x11); 
-
-		LCD_Write_COM(0xC9); 
-		LCD_Write_DATA(0x90);
-		LCD_Write_DATA(0x49);
-		LCD_Write_DATA(0x10); 
-		LCD_Write_DATA(0x28);
-		LCD_Write_DATA(0x28); 
-		LCD_Write_DATA(0x10); 
-		LCD_Write_DATA(0x00); 
-		LCD_Write_DATA(0x06);
-		delay(20);
-		LCD_Write_COM(0xC2); 
-		LCD_Write_DATA(0x60);
-		LCD_Write_DATA(0x71);
-		LCD_Write_DATA(0x01); 
-		LCD_Write_DATA(0x0E);
-		LCD_Write_DATA(0x05); 
-		LCD_Write_DATA(0x02); 
-		LCD_Write_DATA(0x09); 
-		LCD_Write_DATA(0x31);
-		LCD_Write_DATA(0x0A);
-  
-		LCD_Write_COM(0xc3); 
-		LCD_Write_DATA(0x67);
-		LCD_Write_DATA(0x30);
-		LCD_Write_DATA(0x61); 
-		LCD_Write_DATA(0x17);
-		LCD_Write_DATA(0x48); 
-		LCD_Write_DATA(0x07); 
-		LCD_Write_DATA(0x05); 
-		LCD_Write_DATA(0x33); 
-		delay(10);
-		LCD_Write_COM(0xB5); 
-		LCD_Write_DATA(0x35);
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x45); 
-
-		LCD_Write_COM(0xB4); 
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x25);
-		LCD_Write_DATA(0x4c); 
-		delay(10);
-		LCD_Write_COM(0x3a); 
-		LCD_Write_DATA(0x05);
-		LCD_Write_COM(0x29); 
-		delay(10);
-		LCD_Write_COM(0x2a); 
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00); 
-		LCD_Write_DATA(0xaf); 
-		LCD_Write_COM(0x2b); 
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00); 
-		LCD_Write_DATA(0xdb); 
-		LCD_Write_COM(0x2c); 
-		break;
+	#include "tft_drivers/hx8340b/s/initlcd.h"
 #endif
 #ifndef DISABLE_ST7735
-	case ST7735:
-		LCD_Write_COM(0x11);//Sleep exit 
-		delay(12);
- 
-		//ST7735R Frame Rate
-		LCD_Write_COM(0xB1); 
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x2C);
-		LCD_Write_DATA(0x2D); 
-		LCD_Write_COM(0xB2); 
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x2C);
-		LCD_Write_DATA(0x2D); 
-		LCD_Write_COM(0xB3); 
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x2C);
-		LCD_Write_DATA(0x2D); 
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x2C);
-		LCD_Write_DATA(0x2D); 
-
-		LCD_Write_COM(0xB4); //Column inversion 
-		LCD_Write_DATA(0x07); 
- 
-		//ST7735R Power Sequence
-		LCD_Write_COM(0xC0); 
-		LCD_Write_DATA(0xA2);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x84); 
-		LCD_Write_COM(0xC1);
-		LCD_Write_DATA(0xC5); 
-		LCD_Write_COM(0xC2); 
-		LCD_Write_DATA(0x0A);
-		LCD_Write_DATA(0x00); 
-		LCD_Write_COM(0xC3); 
-		LCD_Write_DATA(0x8A);
-		LCD_Write_DATA(0x2A); 
-		LCD_Write_COM(0xC4); 
-		LCD_Write_DATA(0x8A);
-		LCD_Write_DATA(0xEE); 
- 
-		LCD_Write_COM(0xC5); //VCOM 
-		LCD_Write_DATA(0x0E); 
- 
-		LCD_Write_COM(0x36); //MX, MY, RGB mode 
-		LCD_Write_DATA(0xC8); 
-
-		//ST7735R Gamma Sequence
-		LCD_Write_COM(0xe0); 
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x1a); 
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x18); 
-		LCD_Write_DATA(0x2f);
-		LCD_Write_DATA(0x28); 
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x22); 
-		LCD_Write_DATA(0x1f);
-		LCD_Write_DATA(0x1b); 
-		LCD_Write_DATA(0x23);
-		LCD_Write_DATA(0x37);
-		LCD_Write_DATA(0x00); 
-
-		LCD_Write_DATA(0x07); 
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x10); 
-		LCD_Write_COM(0xe1); 
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x1b); 
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x17); 
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x2c); 
-		LCD_Write_DATA(0x29);
-		LCD_Write_DATA(0x2e); 
-		LCD_Write_DATA(0x30);
-		LCD_Write_DATA(0x30); 
-		LCD_Write_DATA(0x39);
-		LCD_Write_DATA(0x3f); 
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x07); 
-		LCD_Write_DATA(0x03);
-		LCD_Write_DATA(0x10);  
-
-		LCD_Write_COM(0x2a);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x7f);
-		LCD_Write_COM(0x2b);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x9f);
-
-		LCD_Write_COM(0xF0); //Enable test command  
-		LCD_Write_DATA(0x01); 
-		LCD_Write_COM(0xF6); //Disable ram power save mode 
-		LCD_Write_DATA(0x00); 
- 
-		LCD_Write_COM(0x3A); //65k mode 
-		LCD_Write_DATA(0x05); 
-		LCD_Write_COM(0x29);//Display on
-		break;
+	#include "tft_drivers/st7735/initlcd.h"
 #endif
 #ifndef DISABLE_PCF8833
-	case PCF8833:
-		LCD_Write_COM(0x01);
-		LCD_Write_COM(0x25);
-		LCD_Write_DATA(0x40);
-		LCD_Write_COM(0x11);
-		delay(10);
-		LCD_Write_COM(0x20);
-		LCD_Write_COM(0x38);
-		LCD_Write_COM(0x29);
-		LCD_Write_COM(0x13);
-		LCD_Write_COM(0x36);
-		LCD_Write_DATA(0x60);
-		LCD_Write_COM(0x3A);
-		LCD_Write_DATA(0x05);
-		LCD_Write_COM(0x2A);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x7F);
-		LCD_Write_COM(0xB4);
-		LCD_Write_DATA(0x03);
-		LCD_Write_DATA(0x08);
-		LCD_Write_DATA(0x0b);
-		LCD_Write_DATA(0x0e);
-		LCD_Write_COM(0xBA);
-		LCD_Write_DATA(0x07);
-		LCD_Write_DATA(0x0D);
-		LCD_Write_COM(0x2B);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x7F);
-		LCD_Write_COM(0x2C);
-		break;
+	#include "tft_drivers/pcf8833/initlcd.h"
 #endif
 #ifndef DISABLE_S1D19122
-	case S1D19122:
-		//************* Start Initial Sequence **********//
-
-		int i,R,G,B;
-		LCD_Write_COM(0x11);
-		LCD_Write_COM(0x13);
-		LCD_Write_COM(0x29);
-    
-		//--------------  Display Control ---------//
-		LCD_Write_COM(0xB0);
-
-		LCD_Write_DATA(0x05);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0xF0);
-		LCD_Write_DATA(0x0A);
-		LCD_Write_DATA(0x41);
-		LCD_Write_DATA(0x02); 
-		LCD_Write_DATA(0x0A);
-		LCD_Write_DATA(0x30);
-		LCD_Write_DATA(0x31);
-		LCD_Write_DATA(0x36);
-		LCD_Write_DATA(0x37);
-		LCD_Write_DATA(0x40);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x3F);
-		LCD_Write_DATA(0x40);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x81);
-		LCD_Write_DATA(0x04);
-		LCD_Write_DATA(0x05);
-		LCD_Write_DATA(0x64);
-
-		// ----------- Gamma  Curve  Set3 Postive----------//
-		LCD_Write_COM(0xFC);
-
-		LCD_Write_DATA(0x88);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x42);
-		LCD_Write_DATA(0x42);
-		LCD_Write_DATA(0x22);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x22);
-		LCD_Write_DATA(0x99);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xBB);
-		LCD_Write_DATA(0xBB);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0xC0);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-
-		// ----------- Gamma  Curve  Set3 Negative----------//
-		LCD_Write_COM(0xFD);
-
-		LCD_Write_DATA(0x88);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x42);
-		LCD_Write_DATA(0x42);
-		LCD_Write_DATA(0x22);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x22);
-		LCD_Write_DATA(0x99);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0xBB);
-		LCD_Write_DATA(0xBB);
-		LCD_Write_DATA(0xAA);
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x33);
-		LCD_Write_DATA(0x11);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x03);
-
-		// ----------- EVRSER Regulator Voltage Setting---------//
-		LCD_Write_COM(0xBE);
-
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x15);
-		LCD_Write_DATA(0x16);
-		LCD_Write_DATA(0x08);
-		LCD_Write_DATA(0x09);
-		LCD_Write_DATA(0x15);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-
-		// -----------Module Definiton Setting---------//
-		LCD_Write_COM(0xC0);
-
-		LCD_Write_DATA(0x0E);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-
-		// -----------PWRDEF Power Ability Ddfinition----------//
-		LCD_Write_COM(0xC1);
-
-		LCD_Write_DATA(0x2F);
-		LCD_Write_DATA(0x23);
-		LCD_Write_DATA(0xB4);
-		LCD_Write_DATA(0xFF);
-		LCD_Write_DATA(0x24);
-		LCD_Write_DATA(0x03);
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x00);
-
-		// -----------Other Setting----------//
-		LCD_Write_COM(0xC2);
-		LCD_Write_DATA(0x03);
-		LCD_Write_COM(0x26);
-		LCD_Write_DATA(0x08);
-		LCD_Write_COM(0x35);
-   
-		LCD_Write_COM(0x36);
-		LCD_Write_DATA(0x64);
-		LCD_Write_COM(0x3A);
-		LCD_Write_DATA(0x05);
-		LCD_Write_COM(0x2A);
-		LCD_Write_DATA(0x013f);
-		LCD_Write_COM(0x2B);
-		LCD_Write_DATA(0xEF);
-		LCD_Write_COM(0x2c);
-
-		// -----------RGB Setting----------//
-		LCD_Write_COM(0x2D);
-		R=0;
-		G=0;
-		B=0;   
-    
-		for(i=0;i<32;i++)
-		{ 
-			LCD_Write_DATA(R);
-			R=R+2;
-		}
-		for(i=0;i<64;i++)
-		{ 
-			LCD_Write_DATA(G);
-			G=G+1;
-		} 
-		for(i=0;i<32;i++)
-		{ 
-			LCD_Write_DATA(B);
-			B=B+2;
-		}    
-		break;
+	#include "tft_drivers/s1d19122/initlcd.h"
 #endif
 #ifndef DISABLE_HX8352A
-	case HX8352A:
-		LCD_Write_COM(0x83);           
-		LCD_Write_DATA(0x02);  //TESTM=1 
-             
-		LCD_Write_COM(0x85);  
-		LCD_Write_DATA(0x03);  //VDC_SEL=011
-		LCD_Write_COM(0x8B);  
-		LCD_Write_DATA(0x01);
-		LCD_Write_COM(0x8C);  
-		LCD_Write_DATA(0x93); //STBA[7]=1,STBA[5:4]=01,STBA[1:0]=11
-        
-		LCD_Write_COM(0x91);  
-		LCD_Write_DATA(0x01); //DCDC_SYNC=1
-        
-		LCD_Write_COM(0x83);  
-		LCD_Write_DATA(0x00); //TESTM=0
-		//Gamma Setting
-
-		LCD_Write_COM(0x3E);  
-		LCD_Write_DATA(0xB0);
-		LCD_Write_COM(0x3F);  
-		LCD_Write_DATA(0x03);
-		LCD_Write_COM(0x40);  
-		LCD_Write_DATA(0x10);
-		LCD_Write_COM(0x41);  
-		LCD_Write_DATA(0x56);
-		LCD_Write_COM(0x42);  
-		LCD_Write_DATA(0x13);
-		LCD_Write_COM(0x43);  
-		LCD_Write_DATA(0x46);
-		LCD_Write_COM(0x44);  
-		LCD_Write_DATA(0x23);
-		LCD_Write_COM(0x45);  
-		LCD_Write_DATA(0x76);
-		LCD_Write_COM(0x46);  
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x47);  
-		LCD_Write_DATA(0x5E);
-		LCD_Write_COM(0x48);  
-		LCD_Write_DATA(0x4F);
-		LCD_Write_COM(0x49);  
-		LCD_Write_DATA(0x40);	
-		//**********Power On sequence************
-        
-		LCD_Write_COM(0x17);  
-		LCD_Write_DATA(0x91);
-       
-		LCD_Write_COM(0x2B);  
-		LCD_Write_DATA(0xF9);
-		delay(10);
-        
-		LCD_Write_COM(0x1B);  
-		LCD_Write_DATA(0x14);
-        
-		LCD_Write_COM(0x1A);  
-		LCD_Write_DATA(0x11);
-              
-		LCD_Write_COM(0x1C);  
-		LCD_Write_DATA(0x06);
-        
-		LCD_Write_COM(0x1F);  
-		LCD_Write_DATA(0x42);
-		delay(20);
-        
-		LCD_Write_COM(0x19);  
-		LCD_Write_DATA(0x0A);
-     
-		LCD_Write_COM(0x19);  
-		LCD_Write_DATA(0x1A);
-		delay(40);
-        
-        
-		LCD_Write_COM(0x19);  
-		LCD_Write_DATA(0x12);
-		delay(40);
-        
-		LCD_Write_COM(0x1E);  
-		LCD_Write_DATA(0x27);
-		delay(100);	   
-        
-        
-		//**********DISPLAY ON SETTING***********
-        
-		LCD_Write_COM(0x24);  
-		LCD_Write_DATA(0x60);
-        
-		LCD_Write_COM(0x3D);  
-		LCD_Write_DATA(0x40);
-        
-		LCD_Write_COM(0x34);  
-		LCD_Write_DATA(0x38);
-        
-		LCD_Write_COM(0x35);  
-		LCD_Write_DATA(0x38);
-        
-		LCD_Write_COM(0x24);  
-		LCD_Write_DATA(0x38);
-		delay(40);
-        
-		LCD_Write_COM(0x24);  
-		LCD_Write_DATA(0x3C);
-        
-		LCD_Write_COM(0x16);  
-		LCD_Write_DATA(0x1C);
-        
-		LCD_Write_COM(0x01);  
-		LCD_Write_DATA(0x06);
-        
-		LCD_Write_COM(0x55);  
-		LCD_Write_DATA(0x00); 
-
-		LCD_Write_COM(0x02);           
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x03);           
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x04);           
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x05);           
-		LCD_Write_DATA(0xef);
-        
-		LCD_Write_COM(0x06);           
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x07);           
-		LCD_Write_DATA(0x00);
-		LCD_Write_COM(0x08);           
-		LCD_Write_DATA(0x01);
-		LCD_Write_COM(0x09);           
-		LCD_Write_DATA(0x8f);
-
-		LCD_Write_COM(0x22);
-		break;
+	#include "tft_drivers/hx8352a/initlcd.h"
 #endif
 #ifndef DISABLE_SSD1963_480
-	case SSD1963_480:
-		LCD_Write_COM(0xE2);		//PLL multiplier, set PLL clock to 120M
-		LCD_Write_DATA(0x23);	    //N=0x36 for 6.5M, 0x23 for 10M crystal
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x54);
-		LCD_Write_COM(0xE0);		// PLL enable
-		LCD_Write_DATA(0x01);
-		delay(10);
-		LCD_Write_COM(0xE0);
-		LCD_Write_DATA(0x03);
-		delay(10);
-		LCD_Write_COM(0x01);		// software reset
-		delay(100);
-		LCD_Write_COM(0xE6);		//PLL setting for PCLK, depends on resolution
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x1F);
-		LCD_Write_DATA(0xFF);
-
-		LCD_Write_COM(0xB0);		//LCD SPECIFICATION
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x01);		//Set HDP	479
-		LCD_Write_DATA(0xDF);
-		LCD_Write_DATA(0x01);		//Set VDP	271
-		LCD_Write_DATA(0x0F);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xB4);		//HSYNC
-		LCD_Write_DATA(0x02);		//Set HT	531
-		LCD_Write_DATA(0x13);
-		LCD_Write_DATA(0x00);		//Set HPS	8
-		LCD_Write_DATA(0x08);
-		LCD_Write_DATA(0x2B);		//Set HPW	43
-		LCD_Write_DATA(0x00);		//Set LPS	2
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xB6);		//VSYNC
-		LCD_Write_DATA(0x01);		//Set VT	288
-		LCD_Write_DATA(0x20);
-		LCD_Write_DATA(0x00);		//Set VPS	4
-		LCD_Write_DATA(0x04);
-		LCD_Write_DATA(0x0c);		//Set VPW	12
-		LCD_Write_DATA(0x00);		//Set FPS	2
-		LCD_Write_DATA(0x02);
-
-		LCD_Write_COM(0xBA);
-		LCD_Write_DATA(0x0F);		//GPIO[3:0] out 1
-
-		LCD_Write_COM(0xB8);
-		LCD_Write_DATA(0x07);	    //GPIO3=input, GPIO[2:0]=output
-		LCD_Write_DATA(0x01);		//GPIO0 normal
-
-		LCD_Write_COM(0x36);		//rotation
-		LCD_Write_DATA(0x22);
-
-		LCD_Write_COM(0xF0);		//pixel data interface
-		LCD_Write_DATA(0x03);
-
-
-		delay(1);
-
-		setXY(0, 0, 479, 271);
-		LCD_Write_COM(0x29);		//display on
-
-		LCD_Write_COM(0xBE);		//set PWM for B/L
-		LCD_Write_DATA(0x06);
-		LCD_Write_DATA(0xf0);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0xf0);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xd0); 
-		LCD_Write_DATA(0x0d);	
-
-		LCD_Write_COM(0x2C); 
-		break;
+	#include "tft_drivers/ssd1963/480/initlcd.h"
 #endif
 #ifndef DISABLE_SSD1963_800
-	case SSD1963_800:
-		LCD_Write_COM(0xE2);		//PLL multiplier, set PLL clock to 120M
-		LCD_Write_DATA(0x1E);	    //N=0x36 for 6.5M, 0x23 for 10M crystal
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0x54);
-		LCD_Write_COM(0xE0);		// PLL enable
-		LCD_Write_DATA(0x01);
-		delay(10);
-		LCD_Write_COM(0xE0);
-		LCD_Write_DATA(0x03);
-		delay(10);
-		LCD_Write_COM(0x01);		// software reset
-		delay(100);
-		LCD_Write_COM(0xE6);		//PLL setting for PCLK, depends on resolution
-		LCD_Write_DATA(0x03);
-		LCD_Write_DATA(0xFF);
-		LCD_Write_DATA(0xFF);
-
-		LCD_Write_COM(0xB0);		//LCD SPECIFICATION
-		LCD_Write_DATA(0x24);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x03);		//Set HDP	799
-		LCD_Write_DATA(0x1F);
-		LCD_Write_DATA(0x01);		//Set VDP	479
-		LCD_Write_DATA(0xDF);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xB4);		//HSYNC
-		LCD_Write_DATA(0x03);		//Set HT	928
-		LCD_Write_DATA(0xA0);
-		LCD_Write_DATA(0x00);		//Set HPS	46
-		LCD_Write_DATA(0x2E);
-		LCD_Write_DATA(0x30);		//Set HPW	48
-		LCD_Write_DATA(0x00);		//Set LPS	15
-		LCD_Write_DATA(0x0F);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xB6);		//VSYNC
-		LCD_Write_DATA(0x02);		//Set VT	525
-		LCD_Write_DATA(0x0D);
-		LCD_Write_DATA(0x00);		//Set VPS	16
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x10);		//Set VPW	16
-		LCD_Write_DATA(0x00);		//Set FPS	8
-		LCD_Write_DATA(0x08);
-
-		LCD_Write_COM(0xBA);
-		LCD_Write_DATA(0x0F);		//GPIO[3:0] out 1
-
-		LCD_Write_COM(0xB8);
-		LCD_Write_DATA(0x07);	    //GPIO3=input, GPIO[2:0]=output
-		LCD_Write_DATA(0x01);		//GPIO0 normal
-
-		LCD_Write_COM(0x36);		//rotation
-		LCD_Write_DATA(0x22);
-
-		LCD_Write_COM(0xF0);		//pixel data interface
-		LCD_Write_DATA(0x03);
-
-
-		delay(1);
-
-		setXY(0, 0, 799, 479);
-		LCD_Write_COM(0x29);		//display on
-
-		LCD_Write_COM(0xBE);		//set PWM for B/L
-		LCD_Write_DATA(0x06);
-		LCD_Write_DATA(0xf0);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0xf0);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xd0); 
-		LCD_Write_DATA(0x0d);	
-
-		LCD_Write_COM(0x2C); 
-		break;
+	#include "tft_drivers/ssd1963/800/initlcd.h"
 #endif
 #ifndef DISABLE_S6D1121
-	case S6D1121_8:
-	case S6D1121_16:
-		LCD_Write_COM_DATA(0x11,0x2004);		
-		LCD_Write_COM_DATA(0x13,0xCC00);		
-		LCD_Write_COM_DATA(0x15,0x2600);	
-		LCD_Write_COM_DATA(0x14,0x252A);	
-		LCD_Write_COM_DATA(0x12,0x0033);		
-		LCD_Write_COM_DATA(0x13,0xCC04);		
-		LCD_Write_COM_DATA(0x13,0xCC06);		
-		LCD_Write_COM_DATA(0x13,0xCC4F);		
-		LCD_Write_COM_DATA(0x13,0x674F);
-		LCD_Write_COM_DATA(0x11,0x2003);
-		LCD_Write_COM_DATA(0x30,0x2609);		
-		LCD_Write_COM_DATA(0x31,0x242C);		
-		LCD_Write_COM_DATA(0x32,0x1F23);		
-		LCD_Write_COM_DATA(0x33,0x2425);		
-		LCD_Write_COM_DATA(0x34,0x2226);		
-		LCD_Write_COM_DATA(0x35,0x2523);		
-		LCD_Write_COM_DATA(0x36,0x1C1A);		
-		LCD_Write_COM_DATA(0x37,0x131D);		
-		LCD_Write_COM_DATA(0x38,0x0B11);		
-		LCD_Write_COM_DATA(0x39,0x1210);		
-		LCD_Write_COM_DATA(0x3A,0x1315);		
-		LCD_Write_COM_DATA(0x3B,0x3619);		
-		LCD_Write_COM_DATA(0x3C,0x0D00);		
-		LCD_Write_COM_DATA(0x3D,0x000D);		
-		LCD_Write_COM_DATA(0x16,0x0007);		
-		LCD_Write_COM_DATA(0x02,0x0013);		
-		LCD_Write_COM_DATA(0x03,0x0003);		
-		LCD_Write_COM_DATA(0x01,0x0127);		
-		LCD_Write_COM_DATA(0x08,0x0303);		
-		LCD_Write_COM_DATA(0x0A,0x000B);		
-		LCD_Write_COM_DATA(0x0B,0x0003);   
-		LCD_Write_COM_DATA(0x0C,0x0000);   
-		LCD_Write_COM_DATA(0x41,0x0000);    
-		LCD_Write_COM_DATA(0x50,0x0000);   
-		LCD_Write_COM_DATA(0x60,0x0005);    
-		LCD_Write_COM_DATA(0x70,0x000B);    
-		LCD_Write_COM_DATA(0x71,0x0000);    
-		LCD_Write_COM_DATA(0x78,0x0000);    
-		LCD_Write_COM_DATA(0x7A,0x0000);   
-		LCD_Write_COM_DATA(0x79,0x0007);		
-		LCD_Write_COM_DATA(0x07,0x0051);   
-		LCD_Write_COM_DATA(0x07,0x0053);		
-		LCD_Write_COM_DATA(0x79,0x0000);
-		LCD_Write_COM(0x22);
-		break;
+	#include "tft_drivers/s6d1121/initlcd.h"
+#endif
+#ifndef DISABLE_ILI9320
+	#include "tft_drivers/ili9320/initlcd.h"
 #endif
 	}
 
@@ -1417,127 +373,50 @@ void UTFT::setXY(word x1, word y1, word x2, word y2)
 
 	switch(display_model)
 	{
-#if !(defined(DISABLE_HX8347A) && defined(DISABLE_HX8352A))
-	case HX8347A:
-	case HX8352A:
-		LCD_Write_COM_DATA(0x02,x1>>8);
-		LCD_Write_COM_DATA(0x03,x1);
-		LCD_Write_COM_DATA(0x04,x2>>8);
-		LCD_Write_COM_DATA(0x05,x2);
-		LCD_Write_COM_DATA(0x06,y1>>8);
-		LCD_Write_COM_DATA(0x07,y1);
-		LCD_Write_COM_DATA(0x08,y2>>8);
-		LCD_Write_COM_DATA(0x09,y2);
-		LCD_Write_COM(0x22);      
-		break;
+#ifndef DISABLE_HX8347A
+	#include "tft_drivers/hx8347a/setxy.h"
 #endif
-#if !defined(DISABLE_ILI9327)
-	case ILI9327:
-		LCD_Write_COM(0x2a);
-  		LCD_Write_DATA(0x00,x1>>8);
-  		LCD_Write_DATA(0x00,x1);
-  		LCD_Write_DATA(0x00,x2>>8);
-  		LCD_Write_DATA(0x00,x2);
-  		LCD_Write_COM(0x2b);
-  		LCD_Write_DATA(0x00,y1>>8);
-  		LCD_Write_DATA(0x00,y1);
-  		LCD_Write_DATA(0x00,y2>>8);
-  		LCD_Write_DATA(0x00,y2);
-  		LCD_Write_COM(0x2c); 							 
-		break;
+#ifndef DISABLE_HX8352A
+	#include "tft_drivers/hx8352a/setxy.h"
 #endif
-#if !defined(DISABLE_SSD1289)
-	case SSD1289:
-		LCD_Write_COM_DATA(0x44,(x2<<8)+x1);
-		LCD_Write_COM_DATA(0x45,y1);
-		LCD_Write_COM_DATA(0x46,y2);
-		LCD_Write_COM_DATA(0x4e,x1);
-		LCD_Write_COM_DATA(0x4f,y1);
-		LCD_Write_COM(0x22); 
-		break;
+#ifndef DISABLE_ILI9327
+	#include "tft_drivers/ili9327/setxy.h"
 #endif
-#if !(defined(DISABLE_ILI9325C) && defined(DISABLE_ILI9325D))
-	case ILI9325C:
-	case ILI9325D_8:
-	case ILI9325D_16:
-		LCD_Write_COM_DATA(0x20,x1);
-		LCD_Write_COM_DATA(0x21,y1);
-		LCD_Write_COM_DATA(0x50,x1);
-		LCD_Write_COM_DATA(0x52,y1);
-		LCD_Write_COM_DATA(0x51,x2);
-		LCD_Write_COM_DATA(0x53,y2);
-		LCD_Write_COM(0x22); 
-		break;
+#ifndef DISABLE_SSD1289
+	#include "tft_drivers/ssd1289/setxy.h"
 #endif
-#if !defined(DISABLE_HX8340B_8)
-	case HX8340B_8:
-		LCD_Write_COM_DATA(0x02,0x0000); 
-		LCD_Write_COM_DATA(0x03,x1); 
-		LCD_Write_COM_DATA(0x04,0x0000);
-		LCD_Write_COM_DATA(0x05,x2);
-		LCD_Write_COM_DATA(0x06,0x0000);
-		LCD_Write_COM_DATA(0x07,y1);
-		LCD_Write_COM_DATA(0x08,0x0000);
-		LCD_Write_COM_DATA(0x09,y2); 
-		LCD_Write_COM(0x22);
-		break;
+#ifndef DISABLE_ILI9325C
+	#include "tft_drivers/ili9325c/setxy.h"
 #endif
-#if !(defined(DISABLE_HX8340B_S) && defined(DISABLE_ST7735) && defined(DISABLE_S1D19122))
-	case HX8340B_S:
-	case ST7735:
-	case S1D19122:
-		LCD_Write_COM(0x2a); 
-  		LCD_Write_DATA(x1>>8);
-  		LCD_Write_DATA(x1);
-  		LCD_Write_DATA(x2>>8);
-  		LCD_Write_DATA(x2);
-		LCD_Write_COM(0x2b); 
-  		LCD_Write_DATA(y1>>8);
-  		LCD_Write_DATA(y1);
-  		LCD_Write_DATA(y2>>8);
-  		LCD_Write_DATA(y2);
-		LCD_Write_COM(0x2c); 
-		break;
+#ifndef DISABLE_ILI9325D
+	#include "tft_drivers/ili9325d/setxy.h"
 #endif
-#if !defined(DISABLE_PCF8833)
-	case PCF8833:
-		LCD_Write_COM(0x2a); 
-  		LCD_Write_DATA(x1);
-  		LCD_Write_DATA(x2);
-		LCD_Write_COM(0x2b); 
-  		LCD_Write_DATA(y1);
-  		LCD_Write_DATA(y2);
-		LCD_Write_COM(0x2c); 
-		break;
+#ifndef DISABLE_HX8340B_8
+	#include "tft_drivers/hx8340b/8/setxy.h"
 #endif
-#if !(defined(DISABLE_SSD1963_480) && defined(DISABLE_SSD1963_800))
-	case SSD1963_480:
-	case SSD1963_800:
-		swap(word, x1, y1);
-		swap(word, x2, y2);
-		LCD_Write_COM(0x2a); 
-  		LCD_Write_DATA(x1>>8);
-  		LCD_Write_DATA(x1);
-  		LCD_Write_DATA(x2>>8);
-  		LCD_Write_DATA(x2);
-		LCD_Write_COM(0x2b); 
-  		LCD_Write_DATA(y1>>8);
-  		LCD_Write_DATA(y1);
-  		LCD_Write_DATA(y2>>8);
-  		LCD_Write_DATA(y2);
-		LCD_Write_COM(0x2c); 
-		break;
+#ifndef DISABLE_HX8340B_S
+	#include "tft_drivers/hx8340b/s/setxy.h"
+#endif
+#ifndef DISABLE_ST7735
+	#include "tft_drivers/st7735/setxy.h"
+#endif
+#ifndef DISABLE_S1D19122
+	#include "tft_drivers/s1d19122/setxy.h"
+#endif
+#ifndef DISABLE_PCF8833
+	#include "tft_drivers/pcf8833/setxy.h"
+#endif
+#ifndef DISABLE_SSD1963_480
+	#include "tft_drivers/ssd1963/480/setxy.h"
+#endif
+#ifndef DISABLE_SSD1963_800
+	#include "tft_drivers/ssd1963/800/setxy.h"
 #endif
 #ifndef DISABLE_S6D1121
-	case S6D1121_8:
-	case S6D1121_16:
-		LCD_Write_COM_DATA(0x46,(x2 << 8) | x1);
-		LCD_Write_COM_DATA(0x47,y2);
-		LCD_Write_COM_DATA(0x48,y1);
-		LCD_Write_COM_DATA(0x20,x1);
-		LCD_Write_COM_DATA(0x21,y1);
-		LCD_Write_COM(0x22);
-		break;
+	#include "tft_drivers/s6d1121/setxy.h"
+#endif
+#ifndef DISABLE_ILI9320
+	#include "tft_drivers/ili9320/setxy.h"
 #endif
 	}
 }
@@ -1606,21 +485,39 @@ void UTFT::fillRect(int x1, int y1, int x2, int y2)
 	{
 		swap(int, y1, y2);
 	}
-
-	if (orient==PORTRAIT)
+	if (display_transfer_mode==16)
 	{
-		for (int i=0; i<((y2-y1)/2)+1; i++)
-		{
-			drawHLine(x1, y1+i, x2-x1);
-			drawHLine(x1, y2-i, x2-x1);
-		}
+		cbi(P_CS, B_CS);
+		setXY(x1, y1, x2, y2);
+		sbi(P_RS, B_RS);
+		_fast_fill_16(fch,fcl,((long(x2-x1)+1)*(long(y2-y1)+1)));
+		sbi(P_CS, B_CS);
+	}
+	else if ((display_transfer_mode==8) and (fch==fcl))
+	{
+		cbi(P_CS, B_CS);
+		setXY(x1, y1, x2, y2);
+		sbi(P_RS, B_RS);
+		_fast_fill_8(fch,((long(x2-x1)+1)*(long(y2-y1)+1)));
+		sbi(P_CS, B_CS);
 	}
 	else
 	{
-		for (int i=0; i<((x2-x1)/2)+1; i++)
+		if (orient==PORTRAIT)
 		{
-			drawVLine(x1+i, y1, y2-y1);
-			drawVLine(x2-i, y1, y2-y1);
+			for (int i=0; i<((y2-y1)/2)+1; i++)
+			{
+				drawHLine(x1, y1+i, x2-x1);
+				drawHLine(x1, y2-i, x2-x1);
+			}
+		}
+		else
+		{
+			for (int i=0; i<((x2-x1)/2)+1; i++)
+			{
+				drawVLine(x1+i, y1, y2-y1);
+				drawVLine(x2-i, y1, y2-y1);
+			}
 		}
 	}
 }
@@ -1667,20 +564,16 @@ void UTFT::drawCircle(int x, int y, int radius)
 	int ddF_y = -2 * radius;
 	int x1 = 0;
 	int y1 = radius;
-	char ch, cl;
-	
-	ch=((fcolorr&248)|fcolorg>>5);
-	cl=((fcolorg&28)<<3|fcolorb>>3);
  
 	cbi(P_CS, B_CS);
 	setXY(x, y + radius, x, y + radius);
-	LCD_Write_DATA(ch,cl);
+	LCD_Write_DATA(fch,fcl);
 	setXY(x, y - radius, x, y - radius);
-	LCD_Write_DATA(ch,cl);
+	LCD_Write_DATA(fch,fcl);
 	setXY(x + radius, y, x + radius, y);
-	LCD_Write_DATA(ch,cl);
+	LCD_Write_DATA(fch,fcl);
 	setXY(x - radius, y, x - radius, y);
-	LCD_Write_DATA(ch,cl);
+	LCD_Write_DATA(fch,fcl);
  
 	while(x1 < y1)
 	{
@@ -1694,21 +587,21 @@ void UTFT::drawCircle(int x, int y, int radius)
 		ddF_x += 2;
 		f += ddF_x;    
 		setXY(x + x1, y + y1, x + x1, y + y1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x - x1, y + y1, x - x1, y + y1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x + x1, y - y1, x + x1, y - y1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x - x1, y - y1, x - x1, y - y1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x + y1, y + x1, x + y1, y + x1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x - y1, y + x1, x - y1, y + x1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x + y1, y - x1, x + y1, y - x1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 		setXY(x - y1, y - x1, x - y1, y - x1);
-		LCD_Write_DATA(ch,cl);
+		LCD_Write_DATA(fch,fcl);
 	}
 	sbi(P_CS, B_CS);
 	clrXY();
@@ -1716,16 +609,14 @@ void UTFT::drawCircle(int x, int y, int radius)
 
 void UTFT::fillCircle(int x, int y, int radius)
 {
-	cbi(P_CS, B_CS);
-	for(int y1=-radius; y1<=radius; y1++) 
-		for(int x1=-radius; x1<=radius; x1++) 
+	for(int y1=-radius; y1<=0; y1++) 
+		for(int x1=-radius; x1<=0; x1++)
 			if(x1*x1+y1*y1 <= radius*radius) 
 			{
-				setXY(x+x1, y+y1, x+x1, y+y1);
-				LCD_Write_DATA(((fcolorr&248)|fcolorg>>5),((fcolorg&28)<<3|fcolorb>>3));
+				drawHLine(x+x1, y+y1, 2*(-x1));
+				drawHLine(x+x1, y-y1, 2*(-x1));
+				break;
 			}
-	sbi(P_CS, B_CS);
-	clrXY();
 }
 
 void UTFT::clrScr()
@@ -1736,14 +627,21 @@ void UTFT::clrScr()
 	clrXY();
 	if (display_transfer_mode!=1)
 		sbi(P_RS, B_RS);
-	for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
+	if (display_transfer_mode==16)
+		_fast_fill_16(0,0,((disp_x_size+1)*(disp_y_size+1)));
+	else if (display_transfer_mode==8)
+		_fast_fill_8(0,((disp_x_size+1)*(disp_y_size+1)));
+	else
 	{
-		if (display_transfer_mode!=1)
-			LCD_Writ_Bus(0,0,display_transfer_mode);
-		else
+		for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
 		{
-			LCD_Writ_Bus(1,0,display_transfer_mode);
-			LCD_Writ_Bus(1,0,display_transfer_mode);
+			if (display_transfer_mode!=1)
+				LCD_Writ_Bus(0,0,display_transfer_mode);
+			else
+			{
+				LCD_Writ_Bus(1,0,display_transfer_mode);
+				LCD_Writ_Bus(1,0,display_transfer_mode);
+			}
 		}
 	}
 	sbi(P_CS, B_CS);
@@ -1751,24 +649,37 @@ void UTFT::clrScr()
 
 void UTFT::fillScr(byte r, byte g, byte b)
 {
+	word color = ((r&248)<<8 | (g&252)<<3 | (b&248)>>3);
+	fillScr(color);
+}
+
+void UTFT::fillScr(word color)
+{
 	long i;
 	char ch, cl;
 	
-	ch=((r&248)|g>>5);
-	cl=((g&28)<<3|b>>3);
+	ch=byte(color>>8);
+	cl=byte(color & 0xFF);
 
 	cbi(P_CS, B_CS);
 	clrXY();
 	if (display_transfer_mode!=1)
 		sbi(P_RS, B_RS);
-	for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
+	if (display_transfer_mode==16)
+		_fast_fill_16(ch,cl,((disp_x_size+1)*(disp_y_size+1)));
+	else if ((display_transfer_mode==8) and (ch==cl))
+		_fast_fill_8(ch,((disp_x_size+1)*(disp_y_size+1)));
+	else
 	{
-		if (display_transfer_mode!=1)
-			LCD_Writ_Bus(ch,cl,display_transfer_mode);
-		else
+		for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
 		{
-			LCD_Writ_Bus(1,ch,display_transfer_mode);
-			LCD_Writ_Bus(1,cl,display_transfer_mode);
+			if (display_transfer_mode!=1)
+				LCD_Writ_Bus(ch,cl,display_transfer_mode);
+			else
+			{
+				LCD_Writ_Bus(1,ch,display_transfer_mode);
+				LCD_Writ_Bus(1,cl,display_transfer_mode);
+			}
 		}
 	}
 	sbi(P_CS, B_CS);
@@ -1776,135 +687,133 @@ void UTFT::fillScr(byte r, byte g, byte b)
 
 void UTFT::setColor(byte r, byte g, byte b)
 {
-	fcolorr=r;
-	fcolorg=g;
-	fcolorb=b;
+	fch=((r&248)|g>>5);
+	fcl=((g&28)<<3|b>>3);
+}
+
+void UTFT::setColor(word color)
+{
+	fch=byte(color>>8);
+	fcl=byte(color & 0xFF);
+}
+
+word UTFT::getColor()
+{
+	return (fch<<8) | fcl;
 }
 
 void UTFT::setBackColor(byte r, byte g, byte b)
 {
-	bcolorr=r;
-	bcolorg=g;
-	bcolorb=b;
+	bch=((r&248)|g>>5);
+	bcl=((g&28)<<3|b>>3);
 }
 
-void UTFT::setPixel(byte r,byte g,byte b)
+void UTFT::setBackColor(word color)
 {
-	LCD_Write_DATA(((r&248)|g>>5),((g&28)<<3|b>>3));	// rrrrrggggggbbbbb
+	bch=byte(color>>8);
+	bcl=byte(color & 0xFF);
+}
+
+word UTFT::getBackColor()
+{
+	return (bch<<8) | bcl;
+}
+
+void UTFT::setPixel(word color)
+{
+	LCD_Write_DATA((color>>8),(color&0xFF));	// rrrrrggggggbbbbb
 }
 
 void UTFT::drawPixel(int x, int y)
 {
 	cbi(P_CS, B_CS);
 	setXY(x, y, x, y);
-	setPixel(fcolorr, fcolorg, fcolorb);
+	setPixel((fch<<8)|fcl);
 	sbi(P_CS, B_CS);
 	clrXY();
 }
 
 void UTFT::drawLine(int x1, int y1, int x2, int y2)
 {
-	int tmp;
-	double delta, tx, ty;
-	double m, b, dx, dy;
-	char ch, cl;
-	
-	ch=((fcolorr&248)|fcolorg>>5);
-	cl=((fcolorg&28)<<3|fcolorb>>3);
-
-	if (((x2-x1)<0))
-	{
-		swap(int, x1, x2);
-		swap(int, y1, y2);
-	}
-    if (((y2-y1)<0))
-	{
-		swap(int, x1, x2);
-		swap(int, y1, y2);
-	}
-
 	if (y1==y2)
-	{
-		if (x1>x2)
-		{
-			swap(int, x1, x2);
-		}
 		drawHLine(x1, y1, x2-x1);
-	}
 	else if (x1==x2)
-	{
-		if (y1>y2)
-		{
-			swap(int, y1, y2);
-		}
 		drawVLine(x1, y1, y2-y1);
-	}
-	else if (abs(x2-x1)>abs(y2-y1))
+	else
 	{
+		unsigned int	dx = (x2 > x1 ? x2 - x1 : x1 - x2);
+		short			xstep =  x2 > x1 ? 1 : -1;
+		unsigned int	dy = (y2 > y1 ? y2 - y1 : y1 - y2);
+		short			ystep =  y2 > y1 ? 1 : -1;
+		int				col = x1, row = y1;
+
 		cbi(P_CS, B_CS);
-		delta=(double(y2-y1)/double(x2-x1));
-		ty=double(y1);
-		if (x1>x2)
+		if (dx < dy)
 		{
-			for (int i=x1; i>=x2; i--)
+			int t = - (dy >> 1);
+			while (true)
 			{
-				setXY(i, int(ty+0.5), i, int(ty+0.5));
-				LCD_Write_DATA(ch, cl);
-        		ty=ty-delta;
-			}
+				setXY (col, row, col, row);
+				LCD_Write_DATA (fch, fcl);
+				if (row == y2)
+					return;
+				row += ystep;
+				t += dx;
+				if (t >= 0)
+				{
+					col += xstep;
+					t   -= dy;
+				}
+			} 
 		}
 		else
 		{
-			for (int i=x1; i<=x2; i++)
+			int t = - (dx >> 1);
+			while (true)
 			{
-				setXY(i, int(ty+0.5), i, int(ty+0.5));
-				LCD_Write_DATA(ch, cl);
-        		ty=ty+delta;
-			}
+				setXY (col, row, col, row);
+				LCD_Write_DATA (fch, fcl);
+				if (col == x2)
+					return;
+				col += xstep;
+				t += dy;
+				if (t >= 0)
+				{
+					row += ystep;
+					t   -= dx;
+				}
+			} 
 		}
 		sbi(P_CS, B_CS);
 	}
-	else
-	{
-		cbi(P_CS, B_CS);
-		delta=(float(x2-x1)/float(y2-y1));
-		tx=float(x1);
-        if (y1>y2)
-        {
-			for (int i=y2+1; i>y1; i--)
-			{
-		 		setXY(int(tx+0.5), i, int(tx+0.5), i);
-				LCD_Write_DATA(ch, cl);
-        		tx=tx+delta;
-			}
-        }
-        else
-        {
-			for (int i=y1; i<y2+1; i++)
-			{
-		 		setXY(int(tx+0.5), i, int(tx+0.5), i);
-				LCD_Write_DATA(ch, cl);
-        		tx=tx+delta;
-			}
-        }
-		sbi(P_CS, B_CS);
-	}
-
 	clrXY();
 }
 
 void UTFT::drawHLine(int x, int y, int l)
 {
-	char ch, cl;
-	
-	ch=((fcolorr&248)|fcolorg>>5);
-	cl=((fcolorg&28)<<3|fcolorb>>3);
-
+	if (l<0)
+	{
+		l = -l;
+		x -= l;
+	}
 	cbi(P_CS, B_CS);
 	setXY(x, y, x+l, y);
-	for (int i=0; i<l+1; i++)
+	if (display_transfer_mode == 16)
 	{
-		LCD_Write_DATA(ch, cl);
+		sbi(P_RS, B_RS);
+		_fast_fill_16(fch,fcl,l);
+	}
+	else if ((display_transfer_mode==8) and (fch==fcl))
+	{
+		sbi(P_RS, B_RS);
+		_fast_fill_8(fch,l);
+	}
+	else
+	{
+		for (int i=0; i<l+1; i++)
+		{
+			LCD_Write_DATA(fch, fcl);
+		}
 	}
 	sbi(P_CS, B_CS);
 	clrXY();
@@ -1912,16 +821,29 @@ void UTFT::drawHLine(int x, int y, int l)
 
 void UTFT::drawVLine(int x, int y, int l)
 {
-	char ch, cl;
-	
-	ch=((fcolorr&248)|fcolorg>>5);
-	cl=((fcolorg&28)<<3|fcolorb>>3);
-
+	if (l<0)
+	{
+		l = -l;
+		y -= l;
+	}
 	cbi(P_CS, B_CS);
 	setXY(x, y, x, y+l);
-	for (int i=0; i<l; i++)
+	if (display_transfer_mode == 16)
 	{
-		LCD_Write_DATA(ch, cl);
+		sbi(P_RS, B_RS);
+		_fast_fill_16(fch,fcl,l);
+	}
+	else if ((display_transfer_mode==8) and (fch==fcl))
+	{
+		sbi(P_RS, B_RS);
+		_fast_fill_8(fch,l);
+	}
+	else
+	{
+		for (int i=0; i<l+1; i++)
+		{
+			LCD_Write_DATA(fch, fcl);
+		}
 	}
 	sbi(P_CS, B_CS);
 	clrXY();
@@ -1947,11 +869,11 @@ void UTFT::printChar(byte c, int x, int y)
 			{   
 				if((ch&(1<<(7-i)))!=0)   
 				{
-					setPixel(fcolorr, fcolorg, fcolorb);
+					setPixel((fch<<8)|fcl);
 				} 
 				else
 				{
-					setPixel(bcolorr, bcolorg, bcolorb);
+					setPixel((bch<<8)|bcl);
 				}   
 			}
 			temp++;
@@ -1971,11 +893,11 @@ void UTFT::printChar(byte c, int x, int y)
 				{   
 					if((ch&(1<<i))!=0)   
 					{
-						setPixel(fcolorr, fcolorg, fcolorb);
+						setPixel((fch<<8)|fcl);
 					} 
 					else
 					{
-						setPixel(bcolorr, bcolorg, bcolorb);
+						setPixel((bch<<8)|bcl);
 					}   
 				}
 			}
@@ -2011,11 +933,11 @@ void UTFT::rotateChar(byte c, int x, int y, int pos, int deg)
 				
 				if((ch&(1<<(7-i)))!=0)   
 				{
-					setPixel(fcolorr, fcolorg, fcolorb);
+					setPixel((fch<<8)|fcl);
 				} 
 				else  
 				{
-					setPixel(bcolorr, bcolorg, bcolorb);
+					setPixel((bch<<8)|bcl);
 				}   
 			}
 		}
@@ -2130,7 +1052,8 @@ void UTFT::printNumF(double num, byte dec, int x, int y, char divider, int lengt
 	char st[27];
 	boolean neg=false;
 	int c=0, f=0;
-	int c2, mult;
+	int c2;
+	long mult;
 	unsigned long inum;
   
 	if (dec<1)
@@ -2228,6 +1151,21 @@ void UTFT::setFont(uint8_t* font)
 	cfont.y_size=fontbyte(1);
 	cfont.offset=fontbyte(2);
 	cfont.numchars=fontbyte(3);
+}
+
+uint8_t* UTFT::getFont()
+{
+	return cfont.font;
+}
+
+uint8_t UTFT::getFontXsize()
+{
+	return cfont.x_size;
+}
+
+uint8_t UTFT::getFontYsize()
+{
+	return cfont.y_size;
 }
 
 void UTFT::drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int scale)

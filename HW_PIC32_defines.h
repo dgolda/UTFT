@@ -1,3 +1,7 @@
+// Enable or disable the use of the AquaLEDSource All in One Super Screw Shield
+// Uncomment the following line if you are using this shield
+//#define AQUALED_SHIELD 1
+
 // *** Hardwarespecific defines ***
 #define cbi(reg, bitmask) (*(reg + 1)) = bitmask
 #define sbi(reg, bitmask) (*(reg + 2)) = bitmask
