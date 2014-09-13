@@ -233,7 +233,7 @@ void loop()
   delay(2000);
   
   myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,318,225);
+  myGLCD.fillRect(1,15,318,224);
 
 // Draw some random circles
   for (int i=0; i<100; i++)

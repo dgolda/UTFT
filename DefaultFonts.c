@@ -1,7 +1,14 @@
+// DO NOT ADD YOUR OWN FONTS TO THIS FILE
+// If you want to use your own fonts you should just drop the font .c file into your sketch folder.
+// ------------------------------------------------------------------------------------------------
+
 #if defined(__AVR__)
 	#include <avr/pgmspace.h>
 	#define fontdatatype uint8_t
-#else
+#elif defined(__PIC32MX__)
+	#define PROGMEM
+	#define fontdatatype const unsigned char
+#elif defined(__arm__)
 	#define PROGMEM
 	#define fontdatatype const unsigned char
 #endif

@@ -1,3 +1,12 @@
+// Enable or disable the use of a display shield designed for use on 
+// an Arduino Uno (or compatible) on an Arduino Mega
+//
+// ** Currently only available for 8bit display shields **
+//
+// Uncomment the following line to enable this feature
+//#define USE_UNO_SHIELD_ON_MEGA 1
+//********************************************************************
+
 // *** Hardwarespecific defines ***
 #define cbi(reg, bitmask) *reg &= ~bitmask
 #define sbi(reg, bitmask) *reg |= bitmask
