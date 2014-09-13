@@ -16,10 +16,10 @@
 extern uint8_t SmallFont[];
 
 // Uncomment the next line for Arduino 2009/Uno
-UTFT myGLCD(ITDB32S,19,18,17,16);   // Remember to change the model parameter to suit your display module!
+//UTFT myGLCD(ITDB32S,19,18,17,16);   // Remember to change the model parameter to suit your display module!
 
 // Uncomment the next line for Arduino Mega
-//UTFT myGLCD(ITDB32S,38,39,40,41);   // Remember to change the model parameter to suit your display module!
+UTFT myGLCD(ITDB32S,38,39,40,41);   // Remember to change the model parameter to suit your display module!
 
 extern unsigned int info[0x400];
 extern unsigned int icon[0x400];
@@ -60,4 +60,3 @@ void loop()
 
   delay(5000);
 }
-

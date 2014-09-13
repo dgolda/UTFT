@@ -32,3 +32,19 @@ Version:
 				fixed a bug in printNumF()
 	2.4	11 May 2013  -  added basic support for multiple display modules from Coldtears
 	2.41	12 May 2013  -  made some changes to facilitate the use of add-on libraries
+	2.42	17 Jun 2013  -  fixed a small bug in drawBitmap()
+				fixed a bug in the 16-bit Arduino Due driver
+	2.5	25 Jul 2013  -  fixed a bug where some lines were 1 pixel too short
+				fixed a bug in the init code for 7" modules that were only visible in portrait mode
+				added basic support for more display modules from Coldtears
+				updated ImageConverter565 to v2.0
+				added ImgConv v1.0 - Command line image converter
+				added manual for image converters
+				fixed some omissions in memorysaver.h
+	2.51	02 Aug 2013  -  updated ImageConverter565 to v2.1
+				fixed a typo in the tools manual name
+	2.6	07 Sep 2013  -  added support for 4 more ElecFreaks display modules
+				added support for Watterott electronics MI0283QT-9A display module
+				fixed a bug in the "Arduino (ARM)/UTFT_Demo_480x272" example
+	2.7	03 Nov 2013  -  added support for Bobuino (ATmega1284P) 
+				optimized Arduino Due driver slightly

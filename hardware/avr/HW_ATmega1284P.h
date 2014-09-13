@@ -10,18 +10,18 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 	case 1:
 		if (display_serial_mode==SERIAL_4PIN)
 		{
-			if (VH==1)
-				sbi(P_SDA, B_SDA);
-			else
-				cbi(P_SDA, B_SDA);
-			pulse_low(P_SCL, B_SCL);
+		if (VH==1)
+			sbi(P_SDA, B_SDA);
+		else
+			cbi(P_SDA, B_SDA);
+		pulse_low(P_SCL, B_SCL);
 		}
 		else
 		{
-			if (VH==1)
-				sbi(P_RS, B_RS);
-			else
-				cbi(P_RS, B_RS);
+		if (VH==1)
+			sbi(P_RS, B_RS);
+		else
+			cbi(P_RS, B_RS);
 		}
 
 		if (VL & 0x80)
@@ -66,96 +66,65 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		pulse_low(P_SCL, B_SCL);
 		break;
 	case 8:
-#ifdef CTE_DUE_SHIELD
-		REG_PIOC_CODR=0xFF000;
-		REG_PIOC_SODR=(VH<<12) & 0xFF000;
+		cport (PORTD, 0xF0);
+		sport (PORTD, (VH & 0x0F));
+		cport (PORTB, 0xF0);
+		sport (PORTB, (VH & 0xF0)>>4);
 		pulse_low(P_WR, B_WR);
-		REG_PIOC_CODR=0xFF000;
-		REG_PIOC_SODR=(VL<<12) & 0xFF000;
+		cport (PORTD, 0xF0);
+		sport (PORTD, (VL & 0x0F));
+		cport (PORTB, 0xF0);
+		sport (PORTB, (VL & 0xF0)>>4);
 		pulse_low(P_WR, B_WR);
-#else
-		REG_PIOA_CODR=0x0000C000;
-		REG_PIOD_CODR=0x0000064F;
-		REG_PIOA_SODR=(VH & 0x06)<<13;
-		(VH & 0x01) ? REG_PIOB_SODR = 0x4000000 : REG_PIOB_CODR = 0x4000000;
-		REG_PIOD_SODR=((VH & 0x78)>>3) | ((VH & 0x80)>>1);
-		pulse_low(P_WR, B_WR);
-
-		REG_PIOA_CODR=0x0000C000;
-		REG_PIOD_CODR=0x0000064F;
-		REG_PIOA_SODR=(VL & 0x06)<<13;
-		(VL & 0x01) ? REG_PIOB_SODR = 0x4000000 : REG_PIOB_CODR = 0x4000000;
-		REG_PIOD_SODR=((VL & 0x78)>>3) | ((VL & 0x80)>>1);
-		pulse_low(P_WR, B_WR);
-#endif
 		break;
 	case 16:
-#ifdef CTE_DUE_SHIELD
-        REG_PIOC_CODR=0xFF1FE;
-		REG_PIOC_SODR=(VL<<1) & 0x1FE;
-		REG_PIOC_SODR=(VH<<12) & 0xFF000;
-#else
-		REG_PIOA_CODR=0x0000C080;
-		REG_PIOC_CODR=0x0000003E;
-		REG_PIOD_CODR=0x0000064F;
-		REG_PIOA_SODR=((VH & 0x06)<<13) | ((VL & 0x40)<<1);
-		(VH & 0x01) ? REG_PIOB_SODR = 0x4000000 : REG_PIOB_CODR = 0x4000000;
-		REG_PIOC_SODR=((VL & 0x01)<<5) | ((VL & 0x02)<<3) | ((VL & 0x04)<<1) | ((VL & 0x08)>>1) | ((VL & 0x10)>>3);
-		REG_PIOD_SODR=((VH & 0x78)>>3) | ((VH & 0x80)>>1) | ((VL & 0x20)<<5) | ((VL & 0x80)<<2);
-#endif
+		cport (PORTD, 0x90);
+		sport (PORTD, (VH & 0x0F) | ((VL & 0x03)<<5));
+		PORTB = ((VH & 0xF0)>>4) | ((VL & 0x3C)<<2);
+		cport (PORTA, 0x3F);
+		sport (PORTA, ((VL & 0x40)<<1) | ((VL & 0x80)>>1));
 		pulse_low(P_WR, B_WR);
 		break;
 	case LATCHED_16:
-		asm("nop");		// Mode is unsupported
+		cport (PORTD, 0xF0);
+		sport (PORTD, (VH & 0x0F));
+		cport (PORTB, 0xF0);
+		sport (PORTB, (VH & 0xF0)>>4);
+		cbi(P_ALE, B_ALE);
+		pulse_high(P_ALE, B_ALE);
+		cbi(P_CS, B_CS);
+		cport (PORTD, 0xF0);
+		sport (PORTD, (VL & 0x0F));
+		cport (PORTB, 0xF0);
+		sport (PORTB, (VL & 0xF0)>>4);
+		pulse_low(P_WR, B_WR);
+		sbi(P_CS, B_CS);
 		break;
 	}
 }
 
 void UTFT::_set_direction_registers(byte mode)
 {
-	if (mode!=LATCHED_16)
+	DDRB |= 0x0F;
+	DDRD |= 0x0F;
+	if (mode==16)
 	{
-#ifdef CTE_DUE_SHIELD
-		if (mode==16)
-		{
-			REG_PIOC_OER=0x000FF1FE;
-		}
-		else
-			REG_PIOC_OER=0x000FF000;
-#else
-		REG_PIOA_OER=0x0000c000; //PA14,PA15 enable
-		REG_PIOB_OER=0x04000000; //PB26 enable
-		REG_PIOD_OER=0x0000064f; //PD0-3,PD6,PD9-10 enable
-		if (mode==16)
-		{
-			REG_PIOA_OER=0x00000080; //PA7 enable
-			REG_PIOC_OER=0x0000003e; //PC1 - PC5 enable
-		}
-#endif
+		DDRB =  0xFF;
+		DDRD |= 0x6F;
+		DDRA |= 0xC0;
 	}
-	else
-	{
-		asm("nop");		// Mode is unsupported
-	}
+
 }
 
 void UTFT::_fast_fill_16(int ch, int cl, long pix)
 {
 	long blocks;
 
-#ifdef CTE_DUE_SHIELD
-    REG_PIOC_CODR=0xFF1FE;
-	REG_PIOC_SODR=(cl<<1) & 0x1FE;
-	REG_PIOC_SODR=(ch<<12) & 0xFF000;
-#else
-	REG_PIOA_CODR=0x0000C080;
-	REG_PIOC_CODR=0x0000003E;
-	REG_PIOD_CODR=0x0000064F;
-	REG_PIOA_SODR=((ch & 0x06)<<13) | ((cl & 0x40)<<1);
-	(ch & 0x01) ? REG_PIOB_SODR = 0x4000000 : REG_PIOB_CODR = 0x4000000;
-	REG_PIOC_SODR=((cl & 0x01)<<5) | ((cl & 0x02)<<3) | ((cl & 0x04)<<1) | ((cl & 0x08)>>1) | ((cl & 0x10)>>3);
-	REG_PIOD_SODR=((ch & 0x78)>>3) | ((ch & 0x80)>>1) | ((cl & 0x20)<<5) | ((cl & 0x80)<<2);
-#endif
+	cport (PORTD, 0x90);
+	sport (PORTD, (ch & 0x0F) | ((cl & 0x03)<<5));
+	PORTB = ((ch & 0xF0)>>4) | ((cl & 0x3C)<<2);
+	cport (PORTA, 0x3F);
+	sport (PORTA, ((cl & 0x40)<<1) | ((cl & 0x80)>>1));
 
 	blocks = pix/16;
 	for (int i=0; i<blocks; i++)
@@ -188,16 +157,10 @@ void UTFT::_fast_fill_8(int ch, long pix)
 {
 	long blocks;
 
-#ifdef CTE_DUE_SHIELD
-    REG_PIOC_CODR=0xFF000;
-	REG_PIOC_SODR=(ch<<12) & 0xFF000;
-#else
-	REG_PIOA_CODR=0x0000C000;
-	REG_PIOD_CODR=0x0000064F;
-	REG_PIOA_SODR=(ch & 0x06)<<13;
-	(ch & 0x01) ? REG_PIOB_SODR = 0x4000000 : REG_PIOB_CODR = 0x4000000;
-	REG_PIOD_SODR=((ch & 0x78)>>3) | ((ch & 0x80)>>1);
-#endif
+	cport (PORTD, 0xF0);
+	sport (PORTD, (ch & 0x0F));
+	cport (PORTB, 0xF0);
+	sport (PORTB, (ch & 0xF0)>>4);
 
 	blocks = pix/16;
 	for (int i=0; i<blocks; i++)
