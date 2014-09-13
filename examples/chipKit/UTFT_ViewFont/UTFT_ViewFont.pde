@@ -16,7 +16,7 @@ extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
 extern uint8_t SevenSegNumFont[];
 
-// Uncomment the next line for chipKit Uno32
+// Uncomment the next line for chipKit Uno32/uC32
 UTFT myGLCD(ITDB24D,34,35,36,37);   // Remember to change the model parameter to suit your display module!
 
 // Uncomment the next line for chipKit Max32

@@ -25,3 +25,10 @@ Version:
 				fixed a bug that only shows up on some linux-based systems
 				added built-in support for using display shields designed for Arduino Uno on Arduino Mega
 				changed license to CC BY-NC-SA 3.0
+	2.2	01 May 2013  -  added support for ElecFreaks TFT01-5.0 and TFT01-7.0
+				added support for chipKit uC32
+				restructured files slightly
+	2.3	08 May 2013  -  added support for transparent text background
+				fixed a bug in printNumF()
+	2.4	11 May 2013  -  added basic support for multiple display modules from Coldtears
+	2.41	12 May 2013  -  made some changes to facilitate the use of add-on libraries

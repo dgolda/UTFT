@@ -1,9 +1,9 @@
 // *** Hardwarespecific functions ***
 void UTFT::_hw_special_init()
 {
-	REG_PIOA_OWER = 0xFFFFFFFF;
-	REG_PIOB_OWER = 0xFFFFFFFF;
-	REG_PIOC_OWER = 0xFFFFFFFF;  
+	//REG_PIOA_OWER = 0xFFFFFFFF;
+	//REG_PIOB_OWER = 0xFFFFFFFF;
+	//REG_PIOC_OWER = 0xFFFFFFFF;  
 }
 
 void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
@@ -69,6 +69,14 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		pulse_low(P_SCL, B_SCL);
 		break;
 	case 8:
+#ifdef CTE_DUE_SHIELD
+		REG_PIOC_CODR=0xFF000;
+		REG_PIOC_SODR=(VH<<12) & 0xFF000;
+		pulse_low(P_WR, B_WR);
+		REG_PIOC_CODR=0xFF000;
+		REG_PIOC_SODR=(VL<<12) & 0xFF000;
+		pulse_low(P_WR, B_WR);
+#else
 		//Clear port registers
 		REG_PIOA_CODR=0xc000; //PA14,PA15
 		REG_PIOB_CODR=0x4000000; //PB26
@@ -112,8 +120,14 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		//DB15 on PIN29 -> PIO_PD6
 		REG_PIOD_SODR=(VL>>1) & 0x40;
 		pulse_low(P_WR, B_WR);
+#endif
 		break;
 	case 16:
+#ifdef CTE_DUE_SHIELD
+        REG_PIOC_CODR=0xFF1FE;
+		REG_PIOC_SODR=(VL<<1) & 0x1FE;
+		REG_PIOC_SODR=(VH<<12) & 0xFF000;
+#else
 		//Clear port registers
 		REG_PIOA_CODR=0xc080; //PA7,PA14,PA15
 		REG_PIOB_CODR=0x4000000; //PB26
@@ -152,7 +166,7 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		REG_PIOD_SODR=(VH>>3) & 0x08;
 		//DB15 on PIN29 -> PIO_PD6
 		REG_PIOD_SODR=(VH>>1) & 0x40;
-
+#endif
 		pulse_low(P_WR, B_WR);
 		break;
 	case LATCHED_16:
@@ -165,14 +179,23 @@ void UTFT::_set_direction_registers(byte mode)
 {
 	if (mode!=LATCHED_16)
 	{
-		REG_PIOA_OER=0xc000; //PA14,PA15 enable
-		REG_PIOB_OER=0x4000000; //PB26 enable
-		REG_PIOD_OER=0x64f; //PD0-3,PD6,PD9-10 enable
+#ifdef CTE_DUE_SHIELD
 		if (mode==16)
 		{
-			REG_PIOA_OER=0x0080; //PA7 enable
-			REG_PIOC_OER=0x3e; //PC1 - PC5 enable
+			REG_PIOC_OER=0x000FF1FE;
 		}
+		else
+			REG_PIOC_OER=0x000FF000;
+#else
+		REG_PIOA_OER=0x0000c000; //PA14,PA15 enable
+		REG_PIOB_OER=0x40000000; //PB26 enable
+		REG_PIOD_OER=0x00000064f; //PD0-3,PD6,PD9-10 enable
+		if (mode==16)
+		{
+			REG_PIOA_OER=0x00000080; //PA7 enable
+			REG_PIOC_OER=0x0000003e; //PC1 - PC5 enable
+		}
+#endif
 	}
 	else
 	{
@@ -184,6 +207,11 @@ void UTFT::_fast_fill_16(int ch, int cl, long pix)
 {
 	long blocks;
 
+#ifdef CTE_DUE_SHIELD
+    REG_PIOC_CODR=0xFF1FE;
+	REG_PIOC_SODR=(cl<<1) & 0x1FE;
+	REG_PIOC_SODR=(ch<<12) & 0xFF000;
+#else
 	//Clear port registers
 	REG_PIOA_CODR=0xc080; //PA7,PA14,PA15
 	REG_PIOB_CODR=0x4000000; //PB26
@@ -222,6 +250,7 @@ void UTFT::_fast_fill_16(int ch, int cl, long pix)
 	REG_PIOD_SODR=(ch>>3) & 0x08;
 	//DB15 on PIN29 -> PIO_PD6
 	REG_PIOD_SODR=(ch>>1) & 0x40;
+#endif
 
 	blocks = pix/16;
 	for (int i=0; i<blocks; i++)
@@ -254,6 +283,10 @@ void UTFT::_fast_fill_8(int ch, long pix)
 {
 	long blocks;
 
+#ifdef CTE_DUE_SHIELD
+    REG_PIOC_CODR=0xFF000;
+	REG_PIOC_SODR=(ch<<12) & 0xFF000;
+#else
 	//Clear port registers
 	REG_PIOA_CODR=0xc000; //PA14,PA15
 	REG_PIOB_CODR=0x4000000; //PB26
@@ -275,6 +308,7 @@ void UTFT::_fast_fill_8(int ch, long pix)
 	REG_PIOD_SODR=(ch>>3) & 0x08;
 	//DB15 on PIN29 -> PIO_PD6
 	REG_PIOD_SODR=(ch>>1) & 0x40;
+#endif
 
 	blocks = pix/16;
 	for (int i=0; i<blocks; i++)
