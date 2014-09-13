@@ -71,7 +71,11 @@ UTFT::UTFT(byte model, int RS, int WR,int CS, int RST, int SER)
 		case ILI9327:
 			disp_x_size=239;
 			disp_y_size=399;
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_DISPLAY_TRANSFER_MODE
+			display_transfer_mode=8;
+#else
 			display_transfer_mode=16;
+#endif
 			break;
 		case SSD1289:
 			disp_x_size=239;
@@ -227,7 +231,11 @@ void UTFT::LCD_Write_DATA(char VL)
 void UTFT::LCD_Write_COM_DATA(char com1,int dat1)
 {
      LCD_Write_COM(com1);
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_WRITE_COM_DATA
+     LCD_Write_DATA(dat1);
+#else
      LCD_Write_DATA(dat1>>8,dat1);
+#endif
 }
 
 void UTFT::InitLCD(byte orientation)
@@ -235,11 +243,19 @@ void UTFT::InitLCD(byte orientation)
 	orient=orientation;
 
 	sbi(P_RST, B_RST);
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_INIT_LCD
+	delay(1); 
+	cbi(P_RST, B_RST);
+	delay(10);
+	sbi(P_RST, B_RST);
+	delay(50);
+#else
 	delay(5); 
 	cbi(P_RST, B_RST);
 	delay(15);
 	sbi(P_RST, B_RST);
 	delay(15);
+#endif
 
 	cbi(P_CS, B_CS);
 
@@ -369,7 +385,11 @@ void UTFT::InitLCD(byte orientation)
 		LCD_Write_DATA(0x00,0x04);
 		LCD_Write_COM(0xD2); //power setting
 		LCD_Write_DATA(0x00,0x01);
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_INIT_LCD2
+		LCD_Write_COM(0x44);
+#else
 		LCD_Write_DATA(0x00,0x44);
+#endif
 		LCD_Write_COM(0xC8); //Set Gamma
 		LCD_Write_DATA(0x00,0x04);
 		LCD_Write_DATA(0x00,0x67);
@@ -395,7 +415,11 @@ void UTFT::InitLCD(byte orientation)
 		LCD_Write_DATA(0x00,0x00);
 		LCD_Write_DATA(0x00,0x00);
 		LCD_Write_DATA(0x00,0x01);
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_INIT_LCD2
+		LCD_Write_DATA(0x00,0x3F);
+#else
 		LCD_Write_DATA(0x00,0x8F);
+#endif
 		LCD_Write_COM(0x29); //display on      
 		LCD_Write_COM(0x2C); //display on
 		break;
@@ -580,7 +604,7 @@ void UTFT::InitLCD(byte orientation)
 		LCD_Write_COM_DATA(0x26,0x00B8); //PT=10,GON=1, DTE=1, D=1000
 		delay(40);
 		LCD_Write_COM_DATA(0x26,0x00BC); //PT=10,GON=1, DTE=1, D=1100
-		delay(20);                           //新增加的延时  080421    
+		delay(20);                           //??????  080421    
 		// LCD_Write_COM_DATA(0x0001,0x0000);     // PTL='1' Enter Partail mode
 
 		//Driving ability Setting
@@ -613,7 +637,7 @@ void UTFT::InitLCD(byte orientation)
 		delay(20);
 
 		//Power Setting
-		LCD_Write_COM_DATA(0x1F,0x0003); //VRH=4.65V     VREG1（GAMMA） 00~1E  080421    
+		LCD_Write_COM_DATA(0x1F,0x0003); //VRH=4.65V     VREG1(GAMMA) 00~1E  080421    
 		LCD_Write_COM_DATA(0x20,0x0000); //BT (VGH~15V,VGL~-12V,DDVDH~5V)
 		LCD_Write_COM_DATA(0x24,0x0024); //VCOMH(VCOM High voltage3.2V)     0024/12    080421    11~40
 		LCD_Write_COM_DATA(0x25,0x0034); //VCOML(VCOM Low voltage -1.2V)    0034/4A    080421    29~3F 
@@ -649,7 +673,7 @@ void UTFT::InitLCD(byte orientation)
 		LCD_Write_COM_DATA(0x08,0x0000);
 		LCD_Write_COM_DATA(0x09,0x00DB);
 		delay(20);
-		LCD_Write_COM_DATA(0x16,0x0008);  //MV MX MY ML SET  0028横屏显示（此时LCD_Write_COM_DATA(0x0005,0x00DB);  LCD_Write_COM_DATA(0x0009,0x00AF);）
+		LCD_Write_COM_DATA(0x16,0x0008);  //MV MX MY ML SET  0028????(??LCD_Write_COM_DATA(0x0005,0x00DB);  LCD_Write_COM_DATA(0x0009,0x00AF);)
 		LCD_Write_COM_DATA(0x17,0x0005);//COLMOD Control Register (R17h)
 		LCD_Write_COM(0x21);
 		LCD_Write_COM(0x22);
@@ -1674,14 +1698,18 @@ void UTFT::drawCircle(int x, int y, int radius)
  
 	cbi(P_CS, B_CS);
 	setXY(x, y + radius, x, y + radius);
+//	LCD_Write_DATA(cl);
 	LCD_Write_DATA(ch,cl);
 	setXY(x, y - radius, x, y - radius);
+//	LCD_Write_DATA(cl);
 	LCD_Write_DATA(ch,cl);
 	setXY(x + radius, y, x + radius, y);
+//	LCD_Write_DATA(cl);
 	LCD_Write_DATA(ch,cl);
 	setXY(x - radius, y, x - radius, y);
-	LCD_Write_DATA(ch,cl);
- 
+//	LCD_Write_DATA(cl);
+ 	LCD_Write_DATA(ch,cl);
+
 	while(x1 < y1)
 	{
 		if(f >= 0) 
@@ -1694,20 +1722,28 @@ void UTFT::drawCircle(int x, int y, int radius)
 		ddF_x += 2;
 		f += ddF_x;    
 		setXY(x + x1, y + y1, x + x1, y + y1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x - x1, y + y1, x - x1, y + y1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x + x1, y - y1, x + x1, y - y1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x - x1, y - y1, x - x1, y - y1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x + y1, y + x1, x + y1, y + x1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x - y1, y + x1, x - y1, y + x1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x + y1, y - x1, x + y1, y - x1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 		setXY(x - y1, y - x1, x - y1, y - x1);
+//		LCD_Write_DATA(cl);
 		LCD_Write_DATA(ch,cl);
 	}
 	sbi(P_CS, B_CS);
@@ -1722,11 +1758,37 @@ void UTFT::fillCircle(int x, int y, int radius)
 			if(x1*x1+y1*y1 <= radius*radius) 
 			{
 				setXY(x+x1, y+y1, x+x1, y+y1);
+//				LCD_Write_DATA((fcolorr&248)|fcolorg>>5);
+//				LCD_Write_DATA((fcolorg&28)<<3|fcolorb>>3);
 				LCD_Write_DATA(((fcolorr&248)|fcolorg>>5),((fcolorg&28)<<3|fcolorb>>3));
+
 			}
 	sbi(P_CS, B_CS);
 	clrXY();
 }
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SHOW_COLOR_BAR
+void UTFT::show_color_bar()
+{
+	unsigned long i,j;
+	cbi(P_CS, B_CS);
+	clrXY();
+		for (i=0; i<(disp_y_size+1); i++)
+			{
+				for (j=0; j<(disp_x_size+1); j++)
+				{			
+	 				  if(i>350){LCD_Write_DATA(0xFF);LCD_Write_DATA(0xFF);}
+ 	 				  else if(i>300){LCD_Write_DATA(0x00);LCD_Write_DATA(0x1F);}
+ 	 				  else if(i>250){LCD_Write_DATA(0x07);LCD_Write_DATA(0xE0);}
+ 	 				  else if(i>200){LCD_Write_DATA(0x7F);LCD_Write_DATA(0xFF);}
+ 	 				  else if(i>150){LCD_Write_DATA(0xF8);LCD_Write_DATA(0x00);}
+ 	 				  else if(i>100){LCD_Write_DATA(0xF8);LCD_Write_DATA(0x1F);}
+ 	 				  else if(i>50){LCD_Write_DATA(0xFF);LCD_Write_DATA(0xE0);}
+					else {LCD_Write_DATA(213);LCD_Write_DATA(156);}
+				}	
+			}
+sbi(P_CS, B_CS);
+}
+#endif
 
 void UTFT::clrScr()
 {
@@ -1738,6 +1800,10 @@ void UTFT::clrScr()
 		sbi(P_RS, B_RS);
 	for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
 	{
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_CLR_SCR
+			LCD_Writ_Bus(0,0,display_transfer_mode);
+			LCD_Writ_Bus(1,0,display_transfer_mode);
+#else
 		if (display_transfer_mode!=1)
 			LCD_Writ_Bus(0,0,display_transfer_mode);
 		else
@@ -1745,6 +1811,7 @@ void UTFT::clrScr()
 			LCD_Writ_Bus(1,0,display_transfer_mode);
 			LCD_Writ_Bus(1,0,display_transfer_mode);
 		}
+#endif
 	}
 	sbi(P_CS, B_CS);
 }
@@ -1790,8 +1857,13 @@ void UTFT::setBackColor(byte r, byte g, byte b)
 
 void UTFT::setPixel(byte r,byte g,byte b)
 {
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SET_PIXEL
+	LCD_Write_DATA(((g&28)<<3|b>>3));	// rrrrrggggggbbbbb
+    LCD_Write_DATA((r&248)|g>>5); 
+#else
 	LCD_Write_DATA(((r&248)|g>>5),((g&28)<<3|b>>3));	// rrrrrggggggbbbbb
-}
+#endif
+} 
 
 void UTFT::drawPixel(int x, int y)
 {
@@ -1850,6 +1922,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			{
 				setXY(i, int(ty+0.5), i, int(ty+0.5));
 				LCD_Write_DATA(ch, cl);
+//				LCD_Write_DATA(cl);
         		ty=ty-delta;
 			}
 		}
@@ -1859,6 +1932,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			{
 				setXY(i, int(ty+0.5), i, int(ty+0.5));
 				LCD_Write_DATA(ch, cl);
+//				LCD_Write_DATA(cl);
         		ty=ty+delta;
 			}
 		}
@@ -1874,6 +1948,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			for (int i=y2+1; i>y1; i--)
 			{
 		 		setXY(int(tx+0.5), i, int(tx+0.5), i);
+//				LCD_Write_DATA( cl);
 				LCD_Write_DATA(ch, cl);
         		tx=tx+delta;
 			}
@@ -1883,6 +1958,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			for (int i=y1; i<y2+1; i++)
 			{
 		 		setXY(int(tx+0.5), i, int(tx+0.5), i);
+//				LCD_Write_DATA( cl);
 				LCD_Write_DATA(ch, cl);
         		tx=tx+delta;
 			}
@@ -1904,6 +1980,7 @@ void UTFT::drawHLine(int x, int y, int l)
 	setXY(x, y, x+l, y);
 	for (int i=0; i<l+1; i++)
 	{
+//		LCD_Write_DATA( cl);
 		LCD_Write_DATA(ch, cl);
 	}
 	sbi(P_CS, B_CS);
@@ -1921,6 +1998,7 @@ void UTFT::drawVLine(int x, int y, int l)
 	setXY(x, y, x, y+l);
 	for (int i=0; i<l; i++)
 	{
+//		LCD_Write_DATA( cl);
 		LCD_Write_DATA(ch, cl);
 	}
 	sbi(P_CS, B_CS);

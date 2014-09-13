@@ -63,8 +63,13 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		break;
 	case 8:
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_LCD_WRIT_BUS
+	//	PORTA = VH;
+		//pulse_low(P_WR, B_WR);
+#else
 		PORTA = VH;
 		pulse_low(P_WR, B_WR);
+#endif
 		PORTA = VL;
 		pulse_low(P_WR, B_WR);
 #else
