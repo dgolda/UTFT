@@ -1,6 +1,9 @@
 // *** Hardwarespecific functions ***
 void UTFT::_hw_special_init()
 {
+#ifdef EHOUSE_DUE_SHIELD
+    pinMode(24, OUTPUT); digitalWrite(24, HIGH); // Set the TFT_RD pin permanently HIGH as it is not supported by UTFT
+#endif
 }
 
 void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
@@ -95,8 +98,7 @@ void UTFT::LCD_Writ_Bus(char VH,char VL, byte mode)
 		REG_PIOC_SODR=(VL<<1) & 0x1FE;
 		REG_PIOC_SODR=(VH<<12) & 0xFF000;
 #elif defined(EHOUSE_DUE_SHIELD)
-		REG_PIOC_CODR=0xFF3FC;
-		REG_PIOC_SODR=(VL<<2) | (VH<<12);
+		PIOC->PIO_ODSR = ((PIOC->PIO_ODSR&(~0x000FF3FC)) | ((((uint32_t)VL)<<2) | (((uint32_t)VH)<<12)));
 #else
 		REG_PIOA_CODR=0x0000C080;
 		REG_PIOC_CODR=0x0000003E;
@@ -129,6 +131,7 @@ void UTFT::_set_direction_registers(byte mode)
 		if (mode==16)
 		{
 			REG_PIOC_OER=0x000FF3FC;
+			REG_PIOC_OWER=0x000FF3FC;
 		}
 		else
 			REG_PIOC_OER=0x000FF000;
@@ -158,8 +161,7 @@ void UTFT::_fast_fill_16(int ch, int cl, long pix)
 	REG_PIOC_SODR=(cl<<1) & 0x1FE;
 	REG_PIOC_SODR=(ch<<12) & 0xFF000;
 #elif defined(EHOUSE_DUE_SHIELD)
-	REG_PIOC_CODR=0xFF3FC;
-	REG_PIOC_SODR=(cl<<2) | (ch<<12);
+	PIOC->PIO_ODSR = ((PIOC->PIO_ODSR&(~0x000FF3FC)) | ((((uint32_t)cl)<<2) | (((uint32_t)ch)<<12)));
 #else
 	REG_PIOA_CODR=0x0000C080;
 	REG_PIOC_CODR=0x0000003E;

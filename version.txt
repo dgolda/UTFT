@@ -60,3 +60,5 @@ Version:
 	2.74	20 Feb 2014  -  fixed a bug in the serial driver
 	2.75	28 Mar 2014  -  added support for Coldtears 5" and 7" CPLD modules
 	2.76	04 May 2014  -  added support for several display modules from DisplayModule
+	2.77	24 May 2014  -  fixed a bug with the ElecHouse 7" display and shield combination
+
