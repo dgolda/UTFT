@@ -8,4 +8,7 @@ To test - run UTFT_Demo_400x240 from examples/Arduino/AVR/
 
 History:
 * version 1.0 of original library from Henning Karlsen was modified by unknown author(s) to support 3.5" TFTLCD for arduino 2560 from mcufriend.com
-* merge changes from 1.3 version, all customized code was put in conditional directives
+* merge changes from version 1.3, all customized code was put in conditional directives
+* merge changes from version 2.1
+* merge changes from version 2.41
+* merge changes from version 2.76
