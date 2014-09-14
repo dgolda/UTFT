@@ -13,3 +13,4 @@ History:
 * merge changes from version 2.41
 * merge changes from version 2.76
 * merge changes from version 2.77
+* merge changes from version 2.78

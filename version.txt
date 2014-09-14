@@ -61,4 +61,5 @@ Version:
 	2.75	28 Mar 2014  -  added support for Coldtears 5" and 7" CPLD modules
 	2.76	04 May 2014  -  added support for several display modules from DisplayModule
 	2.77	24 May 2014  -  fixed a bug with the ElecHouse 7" display and shield combination
+	2.78	08 Sep 2014  -  fixed compatibility-issues with Arduino 1.5.7
 
