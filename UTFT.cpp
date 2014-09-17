@@ -96,15 +96,9 @@ UTFT::UTFT()
 
 UTFT::UTFT(byte model, int RS, int WR, int CS, int RST, int SER)
 { 
-	word	dsx[] = {239, 239, 239, 239, 239, 239, 175, 175, 239, 127, 127, 239, 271, 479, 239, 239, 239, 239, 239, 239, 479, 319, 239, 175, 127, 239, 239, 319, 319, 799, 127};
-	word	dsy[] = {319, 399, 319, 319, 319, 319, 219, 219, 399, 159, 127, 319, 479, 799, 319, 319, 319, 319, 319, 319, 799, 479, 319, 219, 159, 319, 319, 479, 479, 479, 159};
-	byte	dtm[] = {16, 
-#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_DISPLAY_TRANSFER_MODE
-	8, 
-#else
-	16, 
-#endif
-	16, 8, 8, 16, 8, SERIAL_4PIN, 16, SERIAL_5PIN, SERIAL_5PIN, 16, 16, 16, 8, 16, LATCHED_16, 8, 16, 8, 16, 16, 16, 8, SERIAL_5PIN, SERIAL_5PIN, SERIAL_4PIN, 16, 16, 16, SERIAL_5PIN};
+	word	dsx[] = {239, 239, 239, 239, 239, 239, 175, 175, 239, 127, 127, 239, 271, 479, 239, 239, 239, 239, 239, 239, 479, 319, 239, 175, 127, 239, 239, 319, 319, 799, 127, 239};
+	word	dsy[] = {319, 399, 319, 319, 319, 319, 219, 219, 399, 159, 127, 319, 479, 799, 319, 319, 319, 319, 319, 319, 799, 479, 319, 219, 159, 319, 319, 479, 479, 479, 159, 399};
+	byte	dtm[] = {16, 16, 16, 8, 8, 16, 8, SERIAL_4PIN, 16, SERIAL_5PIN, SERIAL_5PIN, 16, 16, 16, 8, 16, LATCHED_16, 8, 16, 8, 16, 16, 16, 8, SERIAL_5PIN, SERIAL_5PIN, SERIAL_4PIN, 16, 16, 16, SERIAL_5PIN, 8};
 
 	disp_x_size =			dsx[model];
 	disp_y_size =			dsy[model];
@@ -174,23 +168,24 @@ void UTFT::LCD_Write_COM(char VL)
 	if (display_transfer_mode!=1)
 	{
 		cbi(P_RS, B_RS);
-		LCD_Writ_Bus(0x00,VL,display_transfer_mode);
+		LCD_Writ_Bus8(0x00,VL,display_transfer_mode);
+        sbi(P_RS, B_RS);
 	}
 	else
-		LCD_Writ_Bus(0x00,VL,display_transfer_mode);
+		LCD_Writ_Bus8(0x00,VL,display_transfer_mode);
 }
 
 void UTFT::LCD_Write_DATA(char VH,char VL)
 {
 	if (display_transfer_mode!=1)
 	{
-		sbi(P_RS, B_RS);
-		LCD_Writ_Bus(VH,VL,display_transfer_mode);
+		//sbi(P_RS, B_RS);
+		LCD_Writ_Bus16(VH,VL,display_transfer_mode);
 	}
 	else
 	{
-		LCD_Writ_Bus(0x01,VH,display_transfer_mode);
-		LCD_Writ_Bus(0x01,VL,display_transfer_mode);
+		LCD_Writ_Bus8(0x01,VH,display_transfer_mode);
+		LCD_Writ_Bus8(0x01,VL,display_transfer_mode);
 	}
 }
 
@@ -198,21 +193,17 @@ void UTFT::LCD_Write_DATA(char VL)
 {
 	if (display_transfer_mode!=1)
 	{
-		sbi(P_RS, B_RS);
-		LCD_Writ_Bus(0x00,VL,display_transfer_mode);
+		//sbi(P_RS, B_RS);
+		LCD_Writ_Bus8(0x00,VL,display_transfer_mode);
 	}
 	else
-		LCD_Writ_Bus(0x01,VL,display_transfer_mode);
+		LCD_Writ_Bus8(0x01,VL,display_transfer_mode);
 }
 
 void UTFT::LCD_Write_COM_DATA(char com1,int dat1)
 {
      LCD_Write_COM(com1);
-#ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_WRITE_COM_DATA
-     LCD_Write_DATA(dat1);
-#else
      LCD_Write_DATA(dat1>>8,dat1);
-#endif
 }
 
 void UTFT::InitLCD(byte orientation)
@@ -254,6 +245,9 @@ void UTFT::InitLCD(byte orientation)
 #endif
 #ifndef DISABLE_ILI9327
 	#include "tft_drivers/ili9327/initlcd.h"
+#endif
+#ifndef DISABLE_ILI9327_8
+	#include "tft_drivers/ili9327_8/initlcd.h"
 #endif
 #ifndef DISABLE_SSD1289
 	#include "tft_drivers/ssd1289/initlcd.h"
@@ -358,6 +352,9 @@ void UTFT::setXY(word x1, word y1, word x2, word y2)
 #endif
 #ifndef DISABLE_ILI9327
 	#include "tft_drivers/ili9327/setxy.h"
+#endif
+#ifndef DISABLE_ILI9327_8
+	#include "tft_drivers/ili9327_8/setxy.h"
 #endif
 #ifndef DISABLE_SSD1289
 	#include "tft_drivers/ssd1289/setxy.h"
@@ -493,7 +490,7 @@ void UTFT::fillRect(int x1, int y1, int x2, int y2)
 	{
 		cbi(P_CS, B_CS);
 		setXY(x1, y1, x2, y2);
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_16(fch,fcl,((long(x2-x1)+1)*(long(y2-y1)+1)));
 		sbi(P_CS, B_CS);
 	}
@@ -501,7 +498,7 @@ void UTFT::fillRect(int x1, int y1, int x2, int y2)
 	{
 		cbi(P_CS, B_CS);
 		setXY(x1, y1, x2, y2);
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_8(fch,((long(x2-x1)+1)*(long(y2-y1)+1)));
 		sbi(P_CS, B_CS);
 	}
@@ -641,7 +638,7 @@ void UTFT::show_color_bar()
 					else {LCD_Write_DATA(213);LCD_Write_DATA(156);}
 				}	
 			}
-sbi(P_CS, B_CS);
+	sbi(P_CS, B_CS);
 }
 #endif
 
@@ -652,7 +649,7 @@ void UTFT::clrScr()
 	cbi(P_CS, B_CS);
 	clrXY();
 	if (display_transfer_mode!=1)
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 	if (display_transfer_mode==16)
 		_fast_fill_16(0,0,((disp_x_size+1)*(disp_y_size+1)));
 	else if (display_transfer_mode==8)
@@ -662,11 +659,11 @@ void UTFT::clrScr()
 		for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
 		{
 			if (display_transfer_mode!=1)
-				LCD_Writ_Bus(0,0,display_transfer_mode);
+				LCD_Writ_Bus16(0,0,display_transfer_mode);
 			else
 			{
-				LCD_Writ_Bus(1,0,display_transfer_mode);
-				LCD_Writ_Bus(1,0,display_transfer_mode);
+				LCD_Writ_Bus8(1,0,display_transfer_mode);
+				LCD_Writ_Bus8(1,0,display_transfer_mode);
 			}
 		}
 	}
@@ -690,7 +687,7 @@ void UTFT::fillScr(word color)
 	cbi(P_CS, B_CS);
 	clrXY();
 	if (display_transfer_mode!=1)
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 	if (display_transfer_mode==16)
 		_fast_fill_16(ch,cl,((disp_x_size+1)*(disp_y_size+1)));
 	else if ((display_transfer_mode==8) and (ch==cl))
@@ -700,11 +697,11 @@ void UTFT::fillScr(word color)
 		for (i=0; i<((disp_x_size+1)*(disp_y_size+1)); i++)
 		{
 			if (display_transfer_mode!=1)
-				LCD_Writ_Bus(ch,cl,display_transfer_mode);
+				LCD_Writ_Bus16(ch,cl,display_transfer_mode);
 			else
 			{
-				LCD_Writ_Bus(1,ch,display_transfer_mode);
-				LCD_Writ_Bus(1,cl,display_transfer_mode);
+				LCD_Writ_Bus8(1,ch,display_transfer_mode);
+				LCD_Writ_Bus8(1,cl,display_transfer_mode);
 			}
 		}
 	}
@@ -787,7 +784,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			while (true)
 			{
 				setXY (col, row, col, row);
-				LCD_Write_DATA (fch, fcl);
+				LCD_Write_DATA(fch, fcl);
 				if (row == y2)
 					return;
 				row += ystep;
@@ -805,7 +802,7 @@ void UTFT::drawLine(int x1, int y1, int x2, int y2)
 			while (true)
 			{
 				setXY (col, row, col, row);
-				LCD_Write_DATA (fch, fcl);
+				LCD_Write_DATA(fch, fcl);
 				if (col == x2)
 					return;
 				col += xstep;
@@ -833,12 +830,12 @@ void UTFT::drawHLine(int x, int y, int l)
 	setXY(x, y, x+l, y);
 	if (display_transfer_mode == 16)
 	{
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_16(fch,fcl,l);
 	}
 	else if ((display_transfer_mode==8) and (fch==fcl))
 	{
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_8(fch,l);
 	}
 	else
@@ -863,12 +860,12 @@ void UTFT::drawVLine(int x, int y, int l)
 	setXY(x, y, x, y+l);
 	if (display_transfer_mode == 16)
 	{
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_16(fch,fcl,l);
 	}
 	else if ((display_transfer_mode==8) and (fch==fcl))
 	{
-		sbi(P_RS, B_RS);
+		//sbi(P_RS, B_RS);
 		_fast_fill_8(fch,l);
 	}
 	else

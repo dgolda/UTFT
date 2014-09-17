@@ -85,6 +85,7 @@
 #define ILI9486			28
 #define CPLD			29
 #define HX8353C			30
+#define ILI9327_8		31
 
 #define ITDB32			0	// HX8347-A (16bit)
 #define ITDB32WC		1	// ILI9327  (16bit)
@@ -143,6 +144,7 @@
 #define CTE50CPLD		29	// CPLD		(16bit)
 #define CTE70CPLD		29	// CPLD		(16bit)
 #define DMTFT18101      30  // HX8353C  (Serial 5Pin)
+#define NIC35WS			31	// ILI9327  (8bit)
 
 
 #define SERIAL_4PIN		4
@@ -209,7 +211,7 @@ class UTFT
 {
 	public:
 		UTFT();
-		UTFT(byte model, int RS, int WR,int CS, int RST, int SER=0);
+		UTFT(byte model, int RS, int WR, int CS, int RST, int SER=0);
 #ifdef MCUFRIEND_35_TFTLCD_FOR_ARDUINO_2560_SHOW_COLOR_BAR
 		void show_color_bar();
 #endif
@@ -268,7 +270,8 @@ class UTFT
 		_current_font	cfont;
 		boolean			_transparent;
 
-		void LCD_Writ_Bus(char VH,char VL, byte mode);
+		void LCD_Writ_Bus8(char VH,char VL, byte mode);
+		void LCD_Writ_Bus16(char VH,char VL, byte mode);
 		void LCD_Write_COM(char VL);
 		void LCD_Write_DATA(char VH,char VL);
 		void LCD_Write_DATA(char VL);
