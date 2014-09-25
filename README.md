@@ -1,10 +1,15 @@
-UTFT library
+Unofficial version of UTFT library
 
-This is UTFT library original written by Henning Karlsen (see: http://www.henningkarlsen.com/electronics/library.php?id=51) supporting 3.5" TFTLCD for arduino 2560 from mcufriend.com (ITDB32WC/ILI9327 8 bit with customized timings etc).
+This UTFT library original written by Henning Karlsen (see: http://www.henningkarlsen.com/electronics/library.php?id=51)
+is modified by Damian Golda (based on NIC work) to support 3.5" TFTLCD for Arduino MEGA (2560) from mcufriend.com
+(ILI9327 8 bit with customized timings etc).
 
 Tested on Arduino MEGA clone and 3.5" TFTLCD for arduino 2560 from mcufriend.com
 
-To test - run UTFT_Demo_400x240 from examples/Arduino/AVR/
+This version IS NOT SUPPORTED by Henning Karlsen.
+If you have problems - create issue on GitHub.
+
+To test your display - run UTFT_Demo_400x240 from examples/Arduino/AVR/
 
 History:
 * version 1.0 of original library from Henning Karlsen was modified by unknown author(s) to support 3.5" TFTLCD for arduino 2560 from mcufriend.com
