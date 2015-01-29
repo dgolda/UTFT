@@ -17,6 +17,10 @@ If you have problems - create issue on GitHub.
 
 To test your display - open in Arduino IDE: Examples, UTFT, Arduino (AVR), UTFT_Demo_400x240.ino
 
+Or make your own sketch using `NIC35WS` driver:
+
+    UTFT myGLCD(NIC35WS,38,39,40,41); //3.5" TFTLCD for arduino 2560 from mcufriend.com
+
 ## History
 
 * version 1.0 of original library from Henning Karlsen was modified by unknown author(s) to support 3.5" TFTLCD for arduino 2560 from mcufriend.com
