@@ -4,7 +4,14 @@ This UTFT library original written by Henning Karlsen (see: http://www.henningka
 is modified by Damian Golda (based on NIC work) to support 3.5" TFTLCD for Arduino MEGA (2560) from mcufriend.com
 (ILI9327 8 bit with customized timings etc).
 
-Tested on Arduino MEGA clone and 3.5" TFTLCD for arduino 2560 from mcufriend.com
+THIS library was tested ONLY on:
+1) Arduino MEGA clone and '3.5" TFTLCD for arduino 2560 from mcufriend.com' using:
+UTFT myGLCD(NIC35WS,38,39,40,41); //3.5" TFTLCD for arduino 2560 from mcufriend.com on MEGA
+
+2) Arduino UNO clone and '3.5" TFTLCD for arduino 2560 from mcufriend.com' (this display is for MEGA board!) using
+UTFT myGLCD(NIC35WS,A2,A1,A3,A4); //3.5" TFTLCD for arduino 2560 from mcufriend.com on UNO
+
+THIS library was NOT TESTED on Arduino UNO nor other displays, but if it works, please send me a note about your configuration and used arguments
 
 This version IS NOT SUPPORTED by Henning Karlsen.
 If you have problems - create issue on GitHub.
