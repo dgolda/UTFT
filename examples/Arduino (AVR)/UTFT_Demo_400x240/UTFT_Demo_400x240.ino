@@ -29,7 +29,8 @@ extern uint8_t SmallFont[];
 //
 // Remember to change the model parameter to suit your display module!
 //UTFT myGLCD(ITDB32WD,38,39,40,41);
-UTFT myGLCD(NIC35WS,38,39,40,41); //3.5" TFTLCD for arduino 2560 from mcufriend.com
+UTFT myGLCD(ILI9327_8,38,39,40,41); //3.5" TFTLCD for arduino 2560 from mcufriend.com
+UTFT myGLCD(ILI9327_8,A2,A1,A3,A4); //3.5" TFTLCD for arduino 2560 from mcufriend.com on UNO
 
 void setup()
 {

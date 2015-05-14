@@ -144,6 +144,7 @@
 #define CTE50CPLD		29	// CPLD		(16bit)
 #define CTE70CPLD		29	// CPLD		(16bit)
 #define DMTFT18101      30  // HX8353C  (Serial 5Pin)
+#define ILI9327_8       31  // ILI9327  (8bit) 400x240
 #define NIC35WS			31	// ILI9327  (8bit)
 
 

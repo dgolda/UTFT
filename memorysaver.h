@@ -25,7 +25,7 @@
 #define DISABLE_ILI9325D  		1	// ITDB24D / ITDB24DWOT / ITDB28 / TFT01_24_8 / TFT01_24_16 / DMTFT24104 / DMTFT28103	- This single define will disable both 8bit and 16bit mode for this controller
 #define DISABLE_ILI9325D_ALT 		1	// CTE28
 #define DISABLE_ILI9327			1	// ITDB32WC / TFT01_32W
-//#define DISABLE_ILI9327_8     1   // NIC35WS
+//#define DISABLE_ILI9327_8     1   // ILI9327_8 / NIC35WS
 #define DISABLE_ILI9341_S4P		1	// MI0283QT9
 #define DISABLE_ILI9341_S5P		1	// TFT01_22SP / DMTFT28105
 #define DISABLE_ILI9481			1	// CTE32HR
